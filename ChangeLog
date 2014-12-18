@@ -1,5 +1,7 @@
 2014-12-19  Ben Finney  <ben+python@benfinney.id.au>
 
+    * Add a DaemonContext option, ‘initgroups’, which specifies whether to
+      set the daemon process's supplementary groups.
     * Set the process groups using ‘os.initgroups’.
       Thanks to Malcolm Purvis for contributing an implementation of this
       feature.

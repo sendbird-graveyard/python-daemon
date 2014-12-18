@@ -189,6 +189,12 @@ class DaemonContext(object):
             relinquish any effective privilege elevation inherited by the
             process.
 
+        `initgroups`
+            :Default: ``True``
+
+            If true, set the daemon process's supplementary groups
+            according to `uid`.
+
         `prevent_core`
             :Default: ``True``
 
@@ -227,6 +233,7 @@ class DaemonContext(object):
             umask=0,
             uid=None,
             gid=None,
+            initgroups=True,
             prevent_core=True,
             detach_process=None,
             files_preserve=None,
@@ -253,6 +260,7 @@ class DaemonContext(object):
         if gid is None:
             gid = os.getgid()
         self.gid = gid
+        self.initgroups = initgroups
 
         if detach_process is None:
             detach_process = is_detach_process_context_required()
@@ -292,8 +300,13 @@ class DaemonContext(object):
               by the process. Note that the specified directory needs to
               already be set up for this purpose.
 
-            * Set the process UID and GID to the `uid` and `gid` attribute
-              values.
+            * Set the process owner (UID and GID) to the `uid` and `gid`
+              attribute values.
+
+              If the `initgroups` attribute is true, also set the process's
+              supplementary groups to all the user's groups (i.e. those
+              groups whose membership includes the username corresponding
+              to `uid`).
 
             * Close all open file descriptors. This excludes those listed in
               the `files_preserve` attribute, and those that correspond to the
@@ -342,7 +355,7 @@ class DaemonContext(object):
 
         change_file_creation_mask(self.umask)
         change_working_directory(self.working_directory)
-        change_process_owner(self.uid, self.gid)
+        change_process_owner(self.uid, self.gid, self.initgroups)
 
         if self.detach_process:
             detach_process_context()

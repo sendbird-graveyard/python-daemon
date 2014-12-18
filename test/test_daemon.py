@@ -208,6 +208,22 @@ class DaemonContext_TestCase(DaemonContext_BaseTestCase):
         instance = daemon.daemon.DaemonContext(**args)
         self.assertEqual(expected_id, instance.gid)
 
+    def test_has_specified_initgroups(self):
+        """ Should have specified `initgroups` option. """
+        args = dict(
+                initgroups=False,
+                )
+        expected_value = args['initgroups']
+        instance = daemon.daemon.DaemonContext(**args)
+        self.assertEqual(expected_value, instance.initgroups)
+
+    def test_has_default_initgroups(self):
+        """ Should have default `initgroups` option. """
+        args = dict()
+        expected_value = True
+        instance = daemon.daemon.DaemonContext(**args)
+        self.assertEqual(expected_value, instance.initgroups)
+
     def test_has_specified_detach_process(self):
         """ Should have specified detach_process option. """
         args = dict(
@@ -369,7 +385,7 @@ class DaemonContext_open_TestCase(DaemonContext_BaseTestCase):
                 mock.call.prevent_core_dump(),
                 mock.call.change_file_creation_mask(mock.ANY),
                 mock.call.change_working_directory(mock.ANY),
-                mock.call.change_process_owner(mock.ANY, mock.ANY),
+                mock.call.change_process_owner(mock.ANY, mock.ANY, mock.ANY),
                 mock.call.detach_process_context(),
                 mock.call.DaemonContext._make_signal_handler_map(),
                 mock.call.set_signal_handlers(mock.ANY),
@@ -446,16 +462,18 @@ class DaemonContext_open_TestCase(DaemonContext_BaseTestCase):
         self.mock_module_daemon.change_file_creation_mask.assert_called_with(
                 umask)
 
-    def test_changes_owner_to_specified_uid_and_gid(self):
-        """ Should change process UID and GID to `uid` and `gid` options. """
+    def test_changes_owner_to_specified_uid_and_gid_and_initgroups(self):
+        """ Should change owner using `uid`, `gid`, `initgroups` options. """
         instance = self.test_instance
-        uid = self.getUniqueInteger()
-        gid = self.getUniqueInteger()
-        instance.uid = uid
-        instance.gid = gid
+        test_uid = self.getUniqueInteger()
+        test_gid = self.getUniqueInteger()
+        test_initgroups = object()
+        instance.uid = test_uid
+        instance.gid = test_gid
+        instance.initgroups = test_initgroups
         instance.open()
         self.mock_module_daemon.change_process_owner.assert_called_with(
-                uid, gid)
+                test_uid, test_gid, test_initgroups)
 
     def test_detaches_process_context(self):
         """ Should request detach of process context. """
