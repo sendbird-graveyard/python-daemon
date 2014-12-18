@@ -22,6 +22,7 @@ from __future__ import (absolute_import, unicode_literals)
 
 import os
 import sys
+import pwd
 import resource
 import errno
 import signal
@@ -547,16 +548,47 @@ def change_file_creation_mask(mask):
         raise error
 
 
-def change_process_owner(uid, gid):
-    """ Change the owning UID and GID of this process.
+def get_username_for_uid(uid):
+    """ Get the username for the specified UID. """
+    passwd_entry = pwd.getpwuid(uid)
+    username = passwd_entry.pw_name
 
-        Sets the GID then the UID of the process (in that order, to
+    return username
+
+
+def change_process_owner(uid, gid, initgroups=True):
+    """ Change the owning UID, GID, and groups of this process.
+
+        :param uid: The target UID for the process.
+        :param gid: The target GID for the process.
+        :param initgroups: If true, initialise the supplementary
+            groups of the process.
+        :return: None.
+
+        Sets the owning GID and UID of the process (in that order, to
         avoid permission errors) to the specified `gid` and `uid`
-        values. Requires appropriate OS privileges for this process.
+        values.
+
+        If `initgroups` is true, the supplementary groups of the
+        process are also initialised, with those corresponding to the
+        username for the target UID.
+
+        All these operations require appropriate OS privileges. If
+        permission is denied, a ``DaemonOSEnvironmentError`` is
+        raised.
 
         """
     try:
-        os.setgid(gid)
+        username = get_username_for_uid(uid)
+    except KeyError:
+        # We don't have a username to pass to ‘os.initgroups’.
+        initgroups = False
+
+    try:
+        if initgroups:
+            os.initgroups(username, gid)
+        else:
+            os.setgid(gid)
         os.setuid(uid)
     except Exception as exc:
         error = DaemonOSEnvironmentError(
