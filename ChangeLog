@@ -1,8 +1,8 @@
-Version NEXT
-============
+Version 2.0.6
+=============
 
-:Released: FUTURE
-:Maintainer:
+:Released: 2015-08-30
+:Maintainer: Ben Finney <ben+python@benfinney.id.au>
 
 * Lower dependency for ‘unittest2’, we can work with an earlier version.
 * Specify development status “Production/Stable” in Trove classifiers.
