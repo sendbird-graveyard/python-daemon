@@ -7,6 +7,8 @@ Version NEXT
 * Lower dependency for ‘unittest2’, we can work with an earlier version.
 * Specify development status “Production/Stable” in Trove classifiers.
 * Migrate to ‘mock’ version 1.3 with corresponding API changes.
+* Use current Python concept of “basestring” to test for an attribute name.
+  Thanks to Arthur de Jong for the bug report.
 
 
 Version 2.0.5

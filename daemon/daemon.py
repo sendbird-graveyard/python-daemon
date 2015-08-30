@@ -483,7 +483,7 @@ class DaemonContext:
             """
         if target is None:
             result = signal.SIG_IGN
-        elif isinstance(target, unicode):
+        elif isinstance(target, basestring):
             name = target
             result = getattr(self, name)
         else:
