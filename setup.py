@@ -88,7 +88,7 @@ setup(
         long_description=long_description,
         classifiers=[
             # Reference: http://pypi.python.org/pypi?%3Aaction=list_classifiers
-            "Development Status :: 4 - Beta",
+            "Development Status :: 5 - Production/Stable",
             "License :: OSI Approved :: Apache Software License",
             "Operating System :: POSIX",
             "Programming Language :: Python :: 2.7",

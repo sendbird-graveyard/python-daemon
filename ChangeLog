@@ -5,6 +5,7 @@ Version NEXT
 :Maintainer:
 
 * Lower dependency for ‘unittest2’, we can work with an earlier version.
+* Specify development status “Production/Stable” in Trove classifiers.
 
 
 Version 2.0.5
