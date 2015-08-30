@@ -69,7 +69,7 @@ setup(
             "unittest2 >=0.5.1",
             "testtools",
             "testscenarios >=0.4",
-            "mock >=1.0",
+            "mock >=1.3",
             "docutils",
             ],
         install_requires=[

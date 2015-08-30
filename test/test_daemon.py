@@ -1011,9 +1011,14 @@ class change_process_owner_TestCase(scaffold.TestCase):
 
             """
         args = self.test_args
+        mock_os_module = mock.MagicMock()
+        mock_os_module.attach_mock(mock_func_os_setuid, "setuid")
+        mock_os_module.attach_mock(mock_func_os_setgid, "setgid")
         daemon.daemon.change_process_owner(**args)
-        mock_func_os_setuid.assert_called()
-        mock_func_os_setgid.assert_called()
+        mock_os_module.assert_has_calls([
+                mock.call.setgid(mock.ANY),
+                mock.call.setuid(mock.ANY),
+                ])
 
     def test_changes_group_id_to_gid(
             self,
@@ -1022,7 +1027,7 @@ class change_process_owner_TestCase(scaffold.TestCase):
         args = self.test_args
         gid = self.test_gid
         daemon.daemon.change_process_owner(**args)
-        mock_func_os_setgid.assert_called(gid)
+        mock_func_os_setgid.assert_called_once_with(gid)
 
     def test_changes_user_id_to_uid(
             self,
@@ -1031,7 +1036,7 @@ class change_process_owner_TestCase(scaffold.TestCase):
         args = self.test_args
         uid = self.test_uid
         daemon.daemon.change_process_owner(**args)
-        mock_func_os_setuid.assert_called(uid)
+        mock_func_os_setuid.assert_called_once_with(uid)
 
     def test_raises_daemon_error_on_os_error_from_setgid(
             self,
