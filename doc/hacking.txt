@@ -23,18 +23,53 @@ Code style
 Python
 ------
 
-All Python code should conform to the guidelines in PEP8_. In
-particular:
+All Python code should conform to the guidelines in :PEP:`8` and :PEP:`257`.
+In particular:
 
-* Indent each level using 4 spaces (``U+0020 SPACE``), and no TABs
-  (``U+0008 CHARACTER TABULATION``).
+Indentation
++++++++++++
+
+* Indent each level using 4 space characters (``U+0020 SPACE``).
+
+* Indent continuation lines two levels (8 spaces). This will help
+  distinguish them from adjacent code blocks indented one level.
+
+  Do not attempt to align continuation lines with characters on the
+  previous line.
+
+* Do not insert TAB (``U+0008 CHARACTER TABULATION``) characters into
+  source code. This allows the code to render the same in different
+  programs, and improves the ability to cut-and-paste the code.
+
+Example::
+
+    flim = flambake(
+            foo=eeny.meeny.miney.moe.Catcher(),
+            bar="eggs", baz="spam")
+    found_anomolous_wibble = False
+    for wibble in flim:
+        if wibble in [
+                zork for zork in zorkulate(wibble)]:
+            found_anomolous_wibble = True
+            break
+        wibble_accumulator.append(wibble)
+    zinkify(wibble_accumulator)
+
+Naming
+++++++
 
 * Name modules in lower case, ``multiplewordslikethis``.
 
 * Name classes in title case, ``MultipleWordsLikeThis``.
 
-* Name functions, instances and other variables in lower case,
-  ``multiple_words_like_this``.
+* Name functions, instances, and other variables in lower case,
+  ``multiplewordslikethis`` or ``multiple_words_like_this``.
+
+* Do not choose ``camelCaseNames``, which are inconsistently
+  capitalised.
+
+Documenting code
+++++++++++++++++
 
 * Every module, class, and function has a Python doc string explaining
   its purpose and API.
@@ -42,7 +77,7 @@ particular:
   *Exception*: Functions whose purpose and API are mandated by Python
   itself (dunder-named methods) do not need a doc string.
 
-* Doc strings are written as triple-quoted strings.
+* Every doc string conforms to :PEP:`257`. Additionally:
 
   * The text of the doc string is marked up with reStructuredText.
 
@@ -68,45 +103,49 @@ particular:
   Example::
 
     def frobnicate(spam, algorithm="dv"):
-        """ Perform frobnication on ``spam``.
+        """ Perform frobnication on the `spam` travortionate.
 
             :param spam: A travortionate (as a sequence of strings).
             :param algorithm: The name of the algorithm to use for
                 frobnicating the travortionate.
             :return: The frobnicated travortionate, if it is
-                non-empty; otherwise None.
+                non-empty; otherwise ``None``.
 
             The frobnication is done by the Dietzel-Venkman algorithm,
-            and optimises for the case where ``spam`` is freebled and
+            and optimises for the case where `spam` is freebled and
             agglutinative.
 
             """
         spagnify(spam)
         # …
 
+Import statements
++++++++++++++++++
+
 * All ``import`` statements appear at the top of the module.
 
-* Each ``import`` statement imports a single module, or multiple names
-  from a single module.
+* Each ``import`` statement imports a single module, or (using
+  ``from``) multiple names from a single module.
 
   Example::
 
     import sys
     import os
-    from spam import foo, bar, baz
+    from spam import (foo, bar, baz)
 
-..  _PEP8: http://www.python.org/dev/peps/pep-0008/
-
-Additional style guidelines:
+Additional style guidelines
++++++++++++++++++++++++++++
 
 * All text files (including program code) are encoded in UTF-8.
 
 * A page break (``U+000C FORM FEED``) whitespace character is used
-  within a module to break up semantically separate areas of the
+  within a text file to break up semantically separate areas of the
   module.
 
 * Editor hints for Emacs and Vim appear in a comment block at the
-  file's end::
+  file's end.
+
+  For Python source code::
 
       
       # Local variables:
@@ -114,6 +153,16 @@ Additional style guidelines:
       # mode: python
       # End:
       # vim: fileencoding=utf-8 filetype=python :
+
+  For reStructuredText documents::
+
+      
+      # Local variables:
+      # coding: utf-8
+      # mode: text
+      # mode: rst
+      # End:
+      # vim: fileencoding=utf-8 filetype=rst :
 
 
 Unit tests
