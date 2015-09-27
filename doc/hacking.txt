@@ -2,7 +2,7 @@ Developer's guide
 #################
 
 :Author: Ben Finney <ben+python@benfinney.id.au>
-:Updated: 2014-11-28
+:Updated: 2015-09-27
 
 
 Project layout
@@ -173,7 +173,7 @@ project.
     coding: utf-8
     mode: rst
     time-stamp-format: "%:y-%02m-%02d"
-    time-stamp-start: "^:Updated:[ 	]+"
+    time-stamp-start: "^:Updated:[	 ]+"
     time-stamp-end: "$"
     time-stamp-line-limit: 20
     End:

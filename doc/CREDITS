@@ -1,7 +1,7 @@
 Credits for contributors to ‘python-daemon’
 ###########################################
 
-:Updated: 2014-12-23
+:Updated: 2015-09-27
 
 The ‘python-daemon’ library is the work of many contributors.
 
@@ -46,7 +46,7 @@ People who have also contributed substantial improvements:
     mode: text
     mode: rst
     time-stamp-format: "%:y-%02m-%02d"
-    time-stamp-start: "^:Updated:[         ]+"
+    time-stamp-start: "^:Updated:[	 ]+"
     time-stamp-end: "$"
     time-stamp-line-limit: 20
     End:
