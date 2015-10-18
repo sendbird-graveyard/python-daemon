@@ -38,13 +38,6 @@ import testscenarios
 import testtools.testcase
 
 
-test_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(test_dir)
-if not test_dir in sys.path:
-    sys.path.insert(1, test_dir)
-if not parent_dir in sys.path:
-    sys.path.insert(1, parent_dir)
-
 # Disable all but the most critical logging messages.
 logging.disable(logging.CRITICAL)
 
