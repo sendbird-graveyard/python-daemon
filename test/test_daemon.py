@@ -1051,10 +1051,9 @@ class change_process_owner_TestCase(scaffold.TestCase):
         self.test_args = dict(
                 uid=self.test_uid,
                 gid=self.test_gid,
-                initgroups=True,
                 )
 
-    def test_changes_gid_and_uid_in_order(
+    def test_sets_groups_and_uid_in_order(
             self,
             mock_func_os_setuid, mock_func_os_setgid,
             mock_func_os_initgroups):
@@ -1066,6 +1065,7 @@ class change_process_owner_TestCase(scaffold.TestCase):
 
             """
         args = self.test_args
+        args['initgroups'] = True
         mock_os_module = mock.MagicMock()
         mock_os_module.attach_mock(mock_func_os_setuid, "setuid")
         mock_os_module.attach_mock(mock_func_os_setgid, "setgid")
@@ -1073,6 +1073,29 @@ class change_process_owner_TestCase(scaffold.TestCase):
         daemon.daemon.change_process_owner(**args)
         mock_os_module.assert_has_calls([
                 mock.call.initgroups(mock.ANY, mock.ANY),
+                mock.call.setuid(mock.ANY),
+                ])
+
+    def test_sets_gid_and_uid_in_order(
+            self,
+            mock_func_os_setuid, mock_func_os_setgid,
+            mock_func_os_initgroups):
+        """ Should set process GID and UID in correct order.
+
+            Since the process requires appropriate privilege to use
+            either of `setuid` or `setgid`, changing the UID must be
+            done last.
+
+            """
+        args = self.test_args
+        args['initgroups'] = False
+        mock_os_module = mock.MagicMock()
+        mock_os_module.attach_mock(mock_func_os_setuid, "setuid")
+        mock_os_module.attach_mock(mock_func_os_setgid, "setgid")
+        mock_os_module.attach_mock(mock_func_os_initgroups, "initgroups")
+        daemon.daemon.change_process_owner(**args)
+        mock_os_module.assert_has_calls([
+                mock.call.setgid(mock.ANY),
                 mock.call.setuid(mock.ANY),
                 ])
 
