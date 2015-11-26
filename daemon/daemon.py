@@ -3,7 +3,7 @@
 # daemon/daemon.py
 # Part of ‘python-daemon’, an implementation of PEP 3143.
 #
-# Copyright © 2008–2014 Ben Finney <ben+python@benfinney.id.au>
+# Copyright © 2008–2015 Ben Finney <ben+python@benfinney.id.au>
 # Copyright © 2007–2008 Robert Niederreiter, Jens Klein
 # Copyright © 2004–2005 Chad J. Schroeder
 # Copyright © 2003 Clark Evans
@@ -28,18 +28,26 @@ import errno
 import signal
 import socket
 import atexit
-
-
 try:
-    # Base type of strings in Python 2.
-    basestring
+    # Python 2 has both ‘str’ (bytes) and ‘unicode’ (text).
+    basestring = basestring
+    unicode = unicode
 except NameError:
-    # Python 3 promotes Unicode to the primary string type.
+    # Python 3 names the Unicode data type ‘str’.
     basestring = str
+    unicode = str
 
 
 class DaemonError(Exception):
     """ Base exception class for errors from this module. """
+
+    def __init__(self, *args, **kwargs):
+        self._chain_from_context()
+
+        super(DaemonError, self).__init__(*args, **kwargs)
+
+    def _chain_from_context(self):
+        _chain_exception_from_existing_exception_context(self, as_cause=True)
 
 
 class DaemonOSEnvironmentError(DaemonError, OSError):
@@ -50,7 +58,7 @@ class DaemonProcessDetachError(DaemonError, OSError):
     """ Exception raised when process detach fails. """
 
 
-class DaemonContext(object):
+class DaemonContext:
     """ Context for turning the current program into a daemon process.
 
         A `DaemonContext` instance represents the behaviour settings and
@@ -115,7 +123,7 @@ class DaemonContext(object):
             umask is set to an explicit known value.
 
             If the conventional value of 0 is too open, consider setting a
-            value such as 022, 027, 077, or another specific value.
+            value such as 0o022, 0o027, 0o077, or another specific value.
             Otherwise, ensure the daemon creates every file with an
             explicit access mode for the purpose.
 
@@ -214,7 +222,8 @@ class DaemonContext(object):
             which will be used as the new file for the standard I/O stream
             `sys.stdin`, `sys.stdout`, and `sys.stderr` respectively. The file
             should therefore be open, with a minimum of mode 'r' in the case
-            of `stdin`, and mode 'w+' in the case of `stdout` and `stderr`.
+            of `stdin`, and mimimum of mode 'w+' in the case of `stdout` and
+            `stderr`.
 
             If the object has a `fileno()` method that returns a file
             descriptor, the corresponding file will be excluded from being
@@ -226,10 +235,12 @@ class DaemonContext(object):
 
         """
 
+    __metaclass__ = type
+
     def __init__(
             self,
             chroot_directory=None,
-            working_directory='/',
+            working_directory="/",
             umask=0,
             uid=None,
             gid=None,
@@ -279,7 +290,8 @@ class DaemonContext(object):
 
     def open(self):
         """ Become a daemon process.
-            :Return: ``None``
+
+            :return: ``None``.
 
             Open the daemon context, turning the current program into a daemon
             process. This performs the following steps:
@@ -384,7 +396,8 @@ class DaemonContext(object):
 
     def close(self):
         """ Exit the daemon process context.
-            :Return: ``None``
+
+            :return: ``None``.
 
             Close the daemon context. This performs the following steps:
 
@@ -415,7 +428,11 @@ class DaemonContext(object):
 
     def terminate(self, signal_number, stack_frame):
         """ Signal handler for end-process signals.
-            :Return: ``None``
+
+            :param signal_number: The OS signal number received.
+            :param stack_frame: The frame object at the point the
+                signal was received.
+            :return: ``None``.
 
             Signal handler for the ``signal.SIGTERM`` signal. Performs the
             following step:
@@ -424,16 +441,19 @@ class DaemonContext(object):
 
             """
         exception = SystemExit(
-                "Terminating on signal %(signal_number)r"
-                    % vars())
+                "Terminating on signal {signal_number!r}".format(
+                    signal_number=signal_number))
         raise exception
 
     def _get_exclude_file_descriptors(self):
-        """ Return the set of file descriptors to exclude closing.
+        """ Get the set of file descriptors to exclude closing.
 
-            Returns a set containing the file descriptors for the
+            :return: A set containing the file descriptors for the
+                files to be preserved.
+
+            The file descriptors to be preserved are those from the
             items in `files_preserve`, and also each of `stdin`,
-            `stdout`, and `stderr`:
+            `stdout`, and `stderr`. For each item:
 
             * If the item is ``None``, it is omitted from the return
               set.
@@ -466,10 +486,13 @@ class DaemonContext(object):
     def _make_signal_handler(self, target):
         """ Make the signal handler for a specified target object.
 
-            If `target` is ``None``, returns ``signal.SIG_IGN``. If
-            `target` is a string, returns the attribute of this
-            instance named by that string. Otherwise, returns `target`
-            itself.
+            :param target: A specification of the target for the
+                handler; see below.
+            :return: The value for use by `signal.signal()`.
+
+            If `target` is ``None``, return ``signal.SIG_IGN``. If `target`
+            is a text string, return the attribute of this instance named
+            by that string. Otherwise, return `target` itself.
 
             """
         if target is None:
@@ -485,7 +508,9 @@ class DaemonContext(object):
     def _make_signal_handler_map(self):
         """ Make the map from signals to handlers for this instance.
 
-            Constructs a map from signal numbers to handlers for this
+            :return: The constructed signal map for this instance.
+
+            Construct a map from signal numbers to handlers for this
             context instance, suitable for passing to
             `set_signal_handlers`.
 
@@ -500,12 +525,12 @@ def _get_file_descriptor(obj):
     """ Get the file descriptor, if the object has one.
 
         :param obj: The object expected to be a file-like object.
-        :return: The file descriptor iff the file supports it;
-            otherwise None.
+        :return: The file descriptor iff the file supports it; otherwise
+            ``None``.
 
         The object may be a non-file object. It may also be a
         file-like object with no support for a file descriptor. In
-        either case, return None.
+        either case, return ``None``.
 
         """
     file_descriptor = None
@@ -521,22 +546,28 @@ def _get_file_descriptor(obj):
 
 def change_working_directory(directory):
     """ Change the working directory of this process.
+
+        :param directory: The target directory path.
+        :return: ``None``.
+
         """
     try:
         os.chdir(directory)
     except Exception as exc:
         error = DaemonOSEnvironmentError(
-                "Unable to change working directory (%(exc)s)"
-                    % vars())
+                "Unable to change working directory ({exc})".format(exc=exc))
         raise error
 
 
 def change_root_directory(directory):
     """ Change the root directory of this process.
 
-        Sets the current working directory, then the process root
-        directory, to the specified `directory`. Requires appropriate
-        OS privileges for this process.
+        :param directory: The target directory path.
+        :return: ``None``.
+
+        Set the current working directory, then the process root directory,
+        to the specified `directory`. Requires appropriate OS privileges
+        for this process.
 
         """
     try:
@@ -544,20 +575,22 @@ def change_root_directory(directory):
         os.chroot(directory)
     except Exception as exc:
         error = DaemonOSEnvironmentError(
-                "Unable to change root directory (%(exc)s)"
-                    % vars())
+                "Unable to change root directory ({exc})".format(exc=exc))
         raise error
 
 
 def change_file_creation_mask(mask):
     """ Change the file creation mask for this process.
+
+        :param mask: The numeric file creation mask to set.
+        :return: ``None``.
+
         """
     try:
         os.umask(mask)
     except Exception as exc:
         error = DaemonOSEnvironmentError(
-                "Unable to change file creation mask (%(exc)s)"
-                    % vars())
+                "Unable to change file creation mask ({exc})".format(exc=exc))
         raise error
 
 
@@ -572,11 +605,11 @@ def get_username_for_uid(uid):
 def change_process_owner(uid, gid, initgroups=True):
     """ Change the owning UID, GID, and groups of this process.
 
-        :param uid: The target UID for the process.
-        :param gid: The target GID for the process.
+        :param uid: The target UID for the daemon process.
+        :param gid: The target GID for the daemon process.
         :param initgroups: If true, initialise the supplementary
             groups of the process.
-        :return: None.
+        :return: ``None``.
 
         Sets the owning GID and UID of the process (in that order, to
         avoid permission errors) to the specified `gid` and `uid`
@@ -605,17 +638,17 @@ def change_process_owner(uid, gid, initgroups=True):
         os.setuid(uid)
     except Exception as exc:
         error = DaemonOSEnvironmentError(
-                "Unable to change process owner (%(exc)s)"
-                    % vars())
+                "Unable to change process owner ({exc})".format(exc=exc))
         raise error
 
 
 def prevent_core_dump():
     """ Prevent this process from generating a core dump.
 
-        Sets the soft and hard limits for core dump size to zero. On
-        Unix, this prevents the process from creating core dump
-        altogether.
+        :return: ``None``.
+
+        Set the soft and hard limits for core dump size to zero. On Unix,
+        this entirely prevents the process from creating core dump.
 
         """
     core_resource = resource.RLIMIT_CORE
@@ -626,8 +659,8 @@ def prevent_core_dump():
         core_limit_prev = resource.getrlimit(core_resource)
     except ValueError as exc:
         error = DaemonOSEnvironmentError(
-                "System does not support RLIMIT_CORE resource limit (%(exc)s)"
-                    % vars())
+                "System does not support RLIMIT_CORE resource limit"
+                " ({exc})".format(exc=exc))
         raise error
 
     # Set hard and soft limits to zero, i.e. no core dump at all.
@@ -637,6 +670,8 @@ def prevent_core_dump():
 
 def detach_process_context():
     """ Detach the process context from parent and session.
+
+        :return: ``None``.
 
         Detach from the parent process and session group, allowing the
         parent to exit while this process continues running.
@@ -650,8 +685,10 @@ def detach_process_context():
     def fork_then_exit_parent(error_message):
         """ Fork a child process, then exit the parent process.
 
-            If the fork fails, raise a ``DaemonProcessDetachError``
-            with ``error_message``.
+            :param error_message: Message for the exception in case of a
+                detach failure.
+            :return: ``None``.
+            :raise DaemonProcessDetachError: If the fork fails.
 
             """
         try:
@@ -659,11 +696,9 @@ def detach_process_context():
             if pid > 0:
                 os._exit(0)
         except OSError as exc:
-            exc_errno = exc.errno
-            exc_strerror = exc.strerror
             error = DaemonProcessDetachError(
-                    "%(error_message)s: [%(exc_errno)d] %(exc_strerror)s"
-                        % vars())
+                    "{message}: [{exc.errno:d}] {exc.strerror}".format(
+                        message=error_message, exc=exc))
             raise error
 
     fork_then_exit_parent(error_message="Failed first fork")
@@ -672,10 +707,12 @@ def detach_process_context():
 
 
 def is_process_started_by_init():
-    """ Determine if the current process is started by `init`.
+    """ Determine whether the current process is started by `init`.
 
-        The `init` process has the process ID of 1; if that is our
-        parent process ID, return ``True``, otherwise ``False``.
+        :return: ``True`` iff the parent process is `init`; otherwise
+            ``False``.
+
+        The `init` process is the one with process ID of 1.
 
         """
     result = False
@@ -688,10 +725,14 @@ def is_process_started_by_init():
 
 
 def is_socket(fd):
-    """ Determine if the file descriptor is a socket.
+    """ Determine whether the file descriptor is a socket.
 
-        Return ``False`` if querying the socket type of `fd` raises an
-        error; otherwise return ``True``.
+        :param fd: The file descriptor to interrogate.
+        :return: ``True`` iff the file descriptor is a socket; otherwise
+            ``False``.
+
+        Query the socket type of `fd`. If there is no error, the file is a
+        socket.
 
         """
     result = False
@@ -717,7 +758,10 @@ def is_socket(fd):
 
 
 def is_process_started_by_superserver():
-    """ Determine if the current process is started by the superserver.
+    """ Determine whether the current process is started by the superserver.
+
+        :return: ``True`` if this process was started by the internet
+            superserver; otherwise ``False``.
 
         The internet superserver creates a network socket, and
         attaches it to the standard streams of the child process. If
@@ -735,14 +779,19 @@ def is_process_started_by_superserver():
 
 
 def is_detach_process_context_required():
-    """ Determine whether detaching process context is required.
+    """ Determine whether detaching the process context is required.
 
-        Return ``True`` if the process environment indicates the
-        process is already detached:
+        :return: ``True`` iff the process is already detached; otherwise
+            ``False``.
+
+        The process environment is interrogated for the following:
 
         * Process was started by `init`; or
 
         * Process was started by `inetd`.
+
+        If any of the above are true, the process is deemed to be already
+        detached.
 
         """
     result = True
@@ -755,32 +804,37 @@ def is_detach_process_context_required():
 def close_file_descriptor_if_open(fd):
     """ Close a file descriptor if already open.
 
+        :param fd: The file descriptor to close.
+        :return: ``None``.
+
         Close the file descriptor `fd`, suppressing an error in the
         case the file was not open.
 
         """
     try:
         os.close(fd)
-    except OSError as exc:
+    except EnvironmentError as exc:
         if exc.errno == errno.EBADF:
             # File descriptor was not open.
             pass
         else:
             error = DaemonOSEnvironmentError(
-                    "Failed to close file descriptor %(fd)d"
-                    " (%(exc)s)"
-                        % vars())
+                    "Failed to close file descriptor {fd:d} ({exc})".format(
+                        fd=fd, exc=exc))
             raise error
 
 
 MAXFD = 2048
 
 def get_maximum_file_descriptors():
-    """ Return the maximum number of open file descriptors for this process.
+    """ Get the maximum number of open file descriptors for this process.
 
-        Return the process hard resource limit of maximum number of
-        open file descriptors. If the limit is “infinity”, a default
-        value of ``MAXFD`` is returned.
+        :return: The number (integer) to use as the maximum number of open
+            files for this process.
+
+        The maximum is the process hard resource limit of maximum number of
+        open file descriptors. If the limit is “infinity”, a default value
+        of ``MAXFD`` is returned.
 
         """
     limits = resource.getrlimit(resource.RLIMIT_NOFILE)
@@ -792,6 +846,10 @@ def get_maximum_file_descriptors():
 
 def close_all_open_files(exclude=set()):
     """ Close all open file descriptors.
+
+        :param exclude: Collection of file descriptors to skip when closing
+            files.
+        :return: ``None``.
 
         Closes every file descriptor (if open) of this process. If
         specified, `exclude` is a set of file descriptors to *not*
@@ -806,6 +864,12 @@ def close_all_open_files(exclude=set()):
 
 def redirect_stream(system_stream, target_stream):
     """ Redirect a system stream to a specified file.
+
+        :param standard_stream: A file object representing a standard I/O
+            stream.
+        :param target_stream: The target file object for the redirected
+            stream, or ``None`` to specify the null device.
+        :return: ``None``.
 
         `system_stream` is a standard system stream such as
         ``sys.stdout``. `target_stream` is an open file object that
@@ -825,8 +889,10 @@ def redirect_stream(system_stream, target_stream):
 def make_default_signal_map():
     """ Make the default signal map for this system.
 
-        The signals available differ by system. The map will not
-        contain any signals not defined on the running system.
+        :return: A mapping from signal number to handler object.
+
+        The signals available differ by system. The map will not contain
+        any signals not defined on the running system.
 
         """
     name_map = {
@@ -846,8 +912,12 @@ def make_default_signal_map():
 def set_signal_handlers(signal_handler_map):
     """ Set the signal handlers as specified.
 
-        The `signal_handler_map` argument is a map from signal number
-        to signal handler. See the `signal` module for details.
+        :param signal_handler_map: A map from signal number to handler
+            object.
+        :return: ``None``.
+
+        See the `signal` module for details on signal numbers and signal
+        handlers.
 
         """
     for (signal_number, handler) in signal_handler_map.items():
@@ -857,11 +927,37 @@ def set_signal_handlers(signal_handler_map):
 def register_atexit_function(func):
     """ Register a function for processing at program exit.
 
+        :param func: A callable function expecting no arguments.
+        :return: ``None``.
+
         The function `func` is registered for a call with no arguments
         at program exit.
 
         """
     atexit.register(func)
+
+
+def _chain_exception_from_existing_exception_context(exc, as_cause=False):
+    """ Decorate the specified exception with the existing exception context.
+
+        :param exc: The exception instance to decorate.
+        :param as_cause: If true, the existing context is declared to be
+            the cause of the exception.
+        :return: ``None``.
+
+        :PEP:`344` describes syntax and attributes (`__traceback__`,
+        `__context__`, `__cause__`) for use in exception chaining.
+
+        Python 2 does not have that syntax, so this function decorates
+        the exception with values from the current exception context.
+
+        """
+    (existing_exc_type, existing_exc, existing_traceback) = sys.exc_info()
+    if as_cause:
+        exc.__cause__ = existing_exc
+    else:
+        exc.__context__ = existing_exc
+    exc.__traceback__ = existing_traceback
 
 
 # Local variables:

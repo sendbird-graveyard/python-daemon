@@ -3,7 +3,7 @@
 # test/test_daemon.py
 # Part of ‘python-daemon’, an implementation of PEP 3143.
 #
-# Copyright © 2008–2014 Ben Finney <ben+python@benfinney.id.au>
+# Copyright © 2008–2015 Ben Finney <ben+python@benfinney.id.au>
 #
 # This is free software: you may copy, modify, and/or distribute this work
 # under the terms of the Apache License, version 2.0 as published by the
@@ -13,7 +13,7 @@
 """ Unit test for ‘daemon’ module.
     """
 
-from __future__ import unicode_literals
+from __future__ import (absolute_import, unicode_literals)
 
 import os
 import sys
@@ -24,18 +24,24 @@ import errno
 import signal
 import socket
 from types import ModuleType
-from StringIO import StringIO
 import collections
+import functools
+try:
+    # Standard library of Python 2.7 and later.
+    from io import StringIO
+except ImportError:
+    # Standard library of Python 2.6 and earlier.
+    from StringIO import StringIO
 
 import mock
 
-import scaffold
-from test_pidfile import (
+from . import scaffold
+from .scaffold import (basestring, unicode)
+from .test_pidfile import (
         FakeFileDescriptorStringIO,
         setup_pidfile_fixtures,
         )
 
-from lockfile import pidlockfile
 import daemon
 
 
@@ -62,7 +68,15 @@ class ModuleExceptions_TestCase(scaffold.Exception_TestCase):
 
 
 def setup_daemon_context_fixtures(testcase):
-    """ Set up common test fixtures for DaemonContext test case. """
+    """ Set up common test fixtures for DaemonContext test case.
+
+        :param testcase: A ``TestCase`` instance to decorate.
+        :return: ``None``.
+
+        Decorate the `testcase` with fixtures for tests involving
+        `DaemonContext`.
+
+        """
     setup_streams_fixtures(testcase)
 
     setup_pidfile_fixtures(testcase)
@@ -344,7 +358,7 @@ class DaemonContext_open_TestCase(DaemonContext_BaseTestCase):
                     "set_signal_handlers",
                     "register_atexit_function",
                     ])
-        for (func_name, patcher) in daemon_func_patchers.iteritems():
+        for (func_name, patcher) in daemon_func_patchers.items():
             mock_func = patcher.start()
             self.addCleanup(patcher.stop)
             self.mock_module_daemon.attach_mock(mock_func, func_name)
@@ -365,8 +379,8 @@ class DaemonContext_open_TestCase(DaemonContext_BaseTestCase):
                     func_name,
                     return_value=return_value))
                 for (func_name, return_value) in
-                    daemoncontext_method_return_values.iteritems())
-        for (func_name, patcher) in daemoncontext_func_patchers.iteritems():
+                    daemoncontext_method_return_values.items())
+        for (func_name, patcher) in daemoncontext_func_patchers.items():
             mock_func = patcher.start()
             self.addCleanup(patcher.stop)
             self.mock_module_daemon.DaemonContext.attach_mock(
@@ -648,10 +662,9 @@ class DaemonContext_terminate_TestCase(DaemonContext_BaseTestCase):
         args = self.test_args
         signal_number = self.test_signal
         expected_exception = SystemExit
-        try:
-            instance.terminate(*args)
-        except expected_exception as exc:
-            pass
+        exc = self.assertRaises(
+                expected_exception,
+                instance.terminate, *args)
         self.assertIn(unicode(signal_number), unicode(exc))
 
 
@@ -674,11 +687,11 @@ class DaemonContext_get_exclude_file_descriptors_TestCase(
                 37: 37,
                 42: FakeFileDescriptorStringIO(),
                 }
-        for (fileno, item) in self.test_files.iteritems():
+        for (fileno, item) in self.test_files.items():
             if hasattr(item, '_fileno'):
                 item._fileno = fileno
         self.test_file_descriptors = set(
-                fd for (fd, item) in self.test_files.iteritems()
+                fd for (fd, item) in self.test_files.items()
                 if item is not None)
         self.test_file_descriptors.update(
                 self.stream_files_by_name[name].fileno()
@@ -688,7 +701,7 @@ class DaemonContext_get_exclude_file_descriptors_TestCase(
     def test_returns_expected_file_descriptors(self):
         """ Should return expected set of file descriptors. """
         instance = self.test_instance
-        instance.files_preserve = self.test_files.values()
+        instance.files_preserve = list(self.test_files.values())
         expected_result = self.test_file_descriptors
         result = instance._get_exclude_file_descriptors()
         self.assertEqual(expected_result, result)
@@ -699,7 +712,7 @@ class DaemonContext_get_exclude_file_descriptors_TestCase(
         instance.files_preserve = None
         expected_result = set(
                 stream.fileno()
-                for stream in self.stream_files_by_name.itervalues())
+                for stream in self.stream_files_by_name.values())
         result = instance._get_exclude_file_descriptors()
         self.assertEqual(expected_result, result)
 
@@ -715,10 +728,10 @@ class DaemonContext_get_exclude_file_descriptors_TestCase(
     def test_omits_non_file_streams(self):
         """ Should omit non-file stream attributes. """
         instance = self.test_instance
-        instance.files_preserve = self.test_files.values()
+        instance.files_preserve = list(self.test_files.values())
         stream_files = self.stream_files_by_name
         expected_result = self.test_file_descriptors.copy()
-        for (pseudo_stream_name, pseudo_stream) in stream_files.iteritems():
+        for (pseudo_stream_name, pseudo_stream) in stream_files.items():
             test_non_file_object = object()
             setattr(instance, pseudo_stream_name, test_non_file_object)
             stream_fd = pseudo_stream.fileno()
@@ -729,13 +742,13 @@ class DaemonContext_get_exclude_file_descriptors_TestCase(
     def test_includes_verbatim_streams_without_file_descriptor(self):
         """ Should include verbatim any stream without a file descriptor. """
         instance = self.test_instance
-        instance.files_preserve = self.test_files.values()
+        instance.files_preserve = list(self.test_files.values())
         stream_files = self.stream_files_by_name
         mock_fileno_method = mock.MagicMock(
-                spec=file.fileno,
+                spec=sys.__stdin__.fileno,
                 side_effect=ValueError)
         expected_result = self.test_file_descriptors.copy()
-        for (pseudo_stream_name, pseudo_stream) in stream_files.iteritems():
+        for (pseudo_stream_name, pseudo_stream) in stream_files.items():
             test_non_fd_stream = StringIO()
             if not hasattr(test_non_fd_stream, 'fileno'):
                 # Python < 3 StringIO doesn't have ‘fileno’ at all.
@@ -751,10 +764,10 @@ class DaemonContext_get_exclude_file_descriptors_TestCase(
     def test_omits_none_streams(self):
         """ Should omit any stream attribute which is None. """
         instance = self.test_instance
-        instance.files_preserve = self.test_files.values()
+        instance.files_preserve = list(self.test_files.values())
         stream_files = self.stream_files_by_name
         expected_result = self.test_file_descriptors.copy()
-        for (pseudo_stream_name, pseudo_stream) in stream_files.iteritems():
+        for (pseudo_stream_name, pseudo_stream) in stream_files.items():
             setattr(instance, pseudo_stream_name, None)
             stream_fd = pseudo_stream.fileno()
             expected_result.discard(stream_fd)
@@ -773,10 +786,18 @@ class DaemonContext_make_signal_handler_TestCase(DaemonContext_BaseTestCase):
         result = instance._make_signal_handler(target)
         self.assertEqual(expected_result, result)
 
-    def test_returns_method_for_name(self):
-        """ Should return method of DaemonContext when name specified. """
+    def test_returns_method_for_str_name(self):
+        """ Should return DaemonContext method for name of type ‘str’. """
         instance = self.test_instance
-        target = 'terminate'
+        target = str('terminate')
+        expected_result = instance.terminate
+        result = instance._make_signal_handler(target)
+        self.assertEqual(expected_result, result)
+
+    def test_returns_method_for_unicode_name(self):
+        """ Should return DaemonContext method for name of type ‘unicode’. """
+        instance = self.test_instance
+        target = unicode('terminate')
         expected_result = instance.terminate
         result = instance._make_signal_handler(target)
         self.assertEqual(expected_result, result)
@@ -815,10 +836,10 @@ class DaemonContext_make_signal_handler_map_TestCase(
 
         self.test_signal_handlers = dict(
                 (key, object())
-                for key in self.test_instance.signal_map.itervalues())
+                for key in self.test_instance.signal_map.values())
         self.test_signal_handler_map = dict(
                 (key, self.test_signal_handlers[target])
-                for (key, target) in self.test_instance.signal_map.iteritems())
+                for (key, target) in self.test_instance.signal_map.items())
 
         def fake_make_signal_handler(target):
             return self.test_signal_handlers[target]
@@ -838,6 +859,13 @@ class DaemonContext_make_signal_handler_map_TestCase(
         self.assertEqual(expected_result, result)
 
 
+try:
+    FileNotFoundError
+except NameError:
+    # Python 2 uses IOError.
+    FileNotFoundError = functools.partial(IOError, errno.ENOENT)
+
+
 @mock.patch.object(os, "chdir")
 class change_working_directory_TestCase(scaffold.TestCase):
     """ Test cases for change_working_directory function. """
@@ -863,27 +891,27 @@ class change_working_directory_TestCase(scaffold.TestCase):
     def test_raises_daemon_error_on_os_error(
             self,
             mock_func_os_chdir):
-        """ Should raise a DaemonError on receiving and OSError. """
+        """ Should raise a DaemonError on receiving an IOError. """
         args = self.test_args
-        test_error = OSError(errno.ENOENT, "No such directory")
+        test_error = FileNotFoundError("No such directory")
         mock_func_os_chdir.side_effect = test_error
         expected_error = daemon.daemon.DaemonOSEnvironmentError
-        self.assertRaises(
+        exc = self.assertRaises(
                 expected_error,
                 daemon.daemon.change_working_directory, **args)
+        self.assertEqual(test_error, exc.__cause__)
 
     def test_error_message_contains_original_error_message(
             self,
             mock_func_os_chdir):
         """ Should raise a DaemonError with original message. """
         args = self.test_args
-        test_error = OSError(errno.ENOENT, "No such directory")
+        test_error = FileNotFoundError("No such directory")
         mock_func_os_chdir.side_effect = test_error
         expected_error = daemon.daemon.DaemonOSEnvironmentError
-        try:
-            daemon.daemon.change_working_directory(**args)
-        except expected_error as exc:
-            pass
+        exc = self.assertRaises(
+                expected_error,
+                daemon.daemon.change_working_directory, **args)
         self.assertIn(unicode(test_error), unicode(exc))
 
 
@@ -922,14 +950,15 @@ class change_root_directory_TestCase(scaffold.TestCase):
     def test_raises_daemon_error_on_os_error_from_chdir(
             self,
             mock_func_os_chdir, mock_func_os_chroot):
-        """ Should raise a DaemonError on receiving an OSError from chdir. """
+        """ Should raise a DaemonError on receiving an IOError from chdir. """
         args = self.test_args
-        test_error = OSError(errno.ENOENT, "No such directory")
+        test_error = FileNotFoundError("No such directory")
         mock_func_os_chdir.side_effect = test_error
         expected_error = daemon.daemon.DaemonOSEnvironmentError
-        self.assertRaises(
+        exc = self.assertRaises(
                 expected_error,
                 daemon.daemon.change_root_directory, **args)
+        self.assertEqual(test_error, exc.__cause__)
 
     def test_raises_daemon_error_on_os_error_from_chroot(
             self,
@@ -939,22 +968,22 @@ class change_root_directory_TestCase(scaffold.TestCase):
         test_error = OSError(errno.EPERM, "No chroot for you!")
         mock_func_os_chroot.side_effect = test_error
         expected_error = daemon.daemon.DaemonOSEnvironmentError
-        self.assertRaises(
+        exc = self.assertRaises(
                 expected_error,
                 daemon.daemon.change_root_directory, **args)
+        self.assertEqual(test_error, exc.__cause__)
 
     def test_error_message_contains_original_error_message(
             self,
             mock_func_os_chdir, mock_func_os_chroot):
         """ Should raise a DaemonError with original message. """
         args = self.test_args
-        test_error = OSError(errno.ENOENT, "No such directory")
+        test_error = FileNotFoundError("No such directory")
         mock_func_os_chdir.side_effect = test_error
         expected_error = daemon.daemon.DaemonOSEnvironmentError
-        try:
-            daemon.daemon.change_root_directory(**args)
-        except expected_error as exc:
-            pass
+        exc = self.assertRaises(
+                expected_error,
+                daemon.daemon.change_root_directory, **args)
         self.assertIn(unicode(test_error), unicode(exc))
 
 
@@ -986,22 +1015,22 @@ class change_file_creation_mask_TestCase(scaffold.TestCase):
         test_error = OSError(errno.EINVAL, "Whatchoo talkin' 'bout?")
         mock_func_os_umask.side_effect = test_error
         expected_error = daemon.daemon.DaemonOSEnvironmentError
-        self.assertRaises(
+        exc = self.assertRaises(
                 expected_error,
                 daemon.daemon.change_file_creation_mask, **args)
+        self.assertEqual(test_error, exc.__cause__)
 
     def test_error_message_contains_original_error_message(
             self,
             mock_func_os_umask):
         """ Should raise a DaemonError with original message. """
         args = self.test_args
-        test_error = OSError(errno.ENOENT, "No such directory")
+        test_error = FileNotFoundError("No such directory")
         mock_func_os_umask.side_effect = test_error
         expected_error = daemon.daemon.DaemonOSEnvironmentError
-        try:
-            daemon.daemon.change_file_creation_mask(**args)
-        except expected_error as exc:
-            pass
+        exc = self.assertRaises(
+                expected_error,
+                daemon.daemon.change_file_creation_mask, **args)
         self.assertIn(unicode(test_error), unicode(exc))
 
 
@@ -1022,6 +1051,7 @@ class change_process_owner_TestCase(scaffold.TestCase):
         self.test_args = dict(
                 uid=self.test_uid,
                 gid=self.test_gid,
+                initgroups=True,
                 )
 
     def test_changes_gid_and_uid_in_order(
@@ -1036,9 +1066,15 @@ class change_process_owner_TestCase(scaffold.TestCase):
 
             """
         args = self.test_args
+        mock_os_module = mock.MagicMock()
+        mock_os_module.attach_mock(mock_func_os_setuid, "setuid")
+        mock_os_module.attach_mock(mock_func_os_setgid, "setgid")
+        mock_os_module.attach_mock(mock_func_os_initgroups, "initgroups")
         daemon.daemon.change_process_owner(**args)
-        mock_func_os_initgroups.assert_called()
-        mock_func_os_setgid.assert_called()
+        mock_os_module.assert_has_calls([
+                mock.call.initgroups(mock.ANY, mock.ANY),
+                mock.call.setuid(mock.ANY),
+                ])
 
     def test_specifies_username_to_initgroups(
             self,
@@ -1058,7 +1094,7 @@ class change_process_owner_TestCase(scaffold.TestCase):
         args = self.test_args
         expected_gid = self.test_gid
         daemon.daemon.change_process_owner(**args)
-        mock_func_os_initgroups.assert_called_with(mock.ANY, expected_gid)
+        mock_func_os_initgroups.assert_called_once_with(mock.ANY, expected_gid)
 
     def test_calls_setgid_when_username_not_found(
             self,
@@ -1069,7 +1105,7 @@ class change_process_owner_TestCase(scaffold.TestCase):
         expected_gid = self.test_gid
         pwd.getpwuid.side_effect = KeyError("No such entry")
         daemon.daemon.change_process_owner(**args)
-        mock_func_os_setgid.assert_called_with(expected_gid)
+        mock_func_os_setgid.assert_called_once_with(expected_gid)
 
     def test_changes_user_id_to_uid(
             self,
@@ -1079,7 +1115,7 @@ class change_process_owner_TestCase(scaffold.TestCase):
         args = self.test_args
         expected_uid = self.test_uid
         daemon.daemon.change_process_owner(**args)
-        mock_func_os_setuid.assert_called_with(expected_uid)
+        mock_func_os_setuid.assert_called_once_with(expected_uid)
 
     def test_raises_daemon_error_on_os_error_from_setting_groups(
             self,
@@ -1091,9 +1127,10 @@ class change_process_owner_TestCase(scaffold.TestCase):
         mock_func_os_initgroups.side_effect = test_error
         mock_func_os_setgid.side_effect = test_error
         expected_error = daemon.daemon.DaemonOSEnvironmentError
-        self.assertRaises(
+        exc = self.assertRaises(
                 expected_error,
                 daemon.daemon.change_process_owner, **args)
+        self.assertEqual(test_error, exc.__cause__)
 
     def test_raises_daemon_error_on_os_error_from_setuid(
             self,
@@ -1104,9 +1141,10 @@ class change_process_owner_TestCase(scaffold.TestCase):
         test_error = OSError(errno.EPERM, "No switching for you!")
         mock_func_os_setuid.side_effect = test_error
         expected_error = daemon.daemon.DaemonOSEnvironmentError
-        self.assertRaises(
+        exc = self.assertRaises(
                 expected_error,
                 daemon.daemon.change_process_owner, **args)
+        self.assertEqual(test_error, exc.__cause__)
 
     def test_error_message_contains_original_error_message(
             self,
@@ -1117,10 +1155,9 @@ class change_process_owner_TestCase(scaffold.TestCase):
         test_error = OSError(errno.EINVAL, "Whatchoo talkin' 'bout?")
         mock_func_os_setuid.side_effect = test_error
         expected_error = daemon.daemon.DaemonOSEnvironmentError
-        try:
-            daemon.daemon.change_process_owner(**args)
-        except expected_error as exc:
-            pass
+        exc = self.assertRaises(
+                expected_error,
+                daemon.daemon.change_process_owner, **args)
         self.assertIn(unicode(test_error), unicode(exc))
 
 
@@ -1153,16 +1190,18 @@ class prevent_core_dump_TestCase(scaffold.TestCase):
             self,
             mock_func_resource_getrlimit, mock_func_resource_setrlimit):
         """ Should raise DaemonError if no RLIMIT_CORE resource. """
+        test_error = ValueError("Bogus platform doesn't have RLIMIT_CORE")
         def fake_getrlimit(res):
             if res == resource.RLIMIT_CORE:
-                raise ValueError("Bogus platform doesn't have RLIMIT_CORE")
+                raise test_error
             else:
                 return None
         mock_func_resource_getrlimit.side_effect = fake_getrlimit
         expected_error = daemon.daemon.DaemonOSEnvironmentError
-        self.assertRaises(
+        exc = self.assertRaises(
                 expected_error,
                 daemon.daemon.prevent_core_dump)
+        self.assertEqual(test_error, exc.__cause__)
 
 
 @mock.patch.object(os, "close")
@@ -1191,7 +1230,7 @@ class close_file_descriptor_if_open_TestCase(scaffold.TestCase):
         daemon.daemon.close_file_descriptor_if_open(fd)
         mock_func_os_close.assert_called_with(fd)
 
-    def test_raises_error_if_error_on_close(self, mock_func_os_close):
+    def test_raises_error_if_oserror_on_close(self, mock_func_os_close):
         """ Should raise DaemonError if an OSError occurs when closing. """
         fd = self.fake_fd
         test_error = OSError(object(), "Unexpected error")
@@ -1199,9 +1238,23 @@ class close_file_descriptor_if_open_TestCase(scaffold.TestCase):
             raise test_error
         mock_func_os_close.side_effect = fake_os_close
         expected_error = daemon.daemon.DaemonOSEnvironmentError
-        self.assertRaises(
+        exc = self.assertRaises(
                 expected_error,
                 daemon.daemon.close_file_descriptor_if_open, fd)
+        self.assertEqual(test_error, exc.__cause__)
+
+    def test_raises_error_if_ioerror_on_close(self, mock_func_os_close):
+        """ Should raise DaemonError if an IOError occurs when closing. """
+        fd = self.fake_fd
+        test_error = IOError(object(), "Unexpected error")
+        def fake_os_close(fd):
+            raise test_error
+        mock_func_os_close.side_effect = fake_os_close
+        expected_error = daemon.daemon.DaemonOSEnvironmentError
+        exc = self.assertRaises(
+                expected_error,
+                daemon.daemon.close_file_descriptor_if_open, fd)
+        self.assertEqual(test_error, exc.__cause__)
 
 
 class maxfd_TestCase(scaffold.TestCase):
@@ -1230,8 +1283,10 @@ class maxfd_TestCase(scaffold.TestCase):
         maxfd = daemon.daemon.MAXFD
         self.assertTrue(
                 expected_minimum <= maxfd,
-                msg="MAXFD should be at least %(expected_minimum)r (got %(maxfd)r)"
-                    % vars())
+                msg=(
+                    "MAXFD should be at least {minimum!r}"
+                    " (got {maxfd!r})".format(
+                        minimum=expected_minimum, maxfd=maxfd)))
 
 
 fake_default_maxfd = 8
@@ -1300,7 +1355,7 @@ class close_all_open_files_TestCase(scaffold.TestCase):
     def test_requests_all_open_files_to_close(
             self, mock_func_close_file_descriptor_if_open):
         """ Should request close of all open files. """
-        expected_file_descriptors = xrange(fake_default_maxfd)
+        expected_file_descriptors = range(fake_default_maxfd)
         expected_calls = [
                 mock.call(fd) for fd in expected_file_descriptors]
         daemon.daemon.close_all_open_files()
@@ -1315,7 +1370,7 @@ class close_all_open_files_TestCase(scaffold.TestCase):
                 exclude=test_exclude,
                 )
         expected_file_descriptors = set(
-                fd for fd in xrange(fake_default_maxfd)
+                fd for fd in range(fake_default_maxfd)
                 if fd not in test_exclude)
         expected_calls = [
                 mock.call(fd) for fd in expected_file_descriptors]
@@ -1375,20 +1430,21 @@ class detach_process_context_TestCase(scaffold.TestCase):
         """ Error on first fork should raise DaemonProcessDetachError. """
         fork_errno = 13
         fork_strerror = "Bad stuff happened"
-        fork_error = OSError(fork_errno, fork_strerror)
-        test_pids_iter = iter([fork_error])
+        test_error = OSError(fork_errno, fork_strerror)
+        test_pids_iter = iter([test_error])
 
         def fake_fork():
-            next_item = test_pids_iter.next()
+            next_item = next(test_pids_iter)
             if isinstance(next_item, Exception):
                 raise next_item
             else:
                 return next_item
 
         self.mock_func_os_fork.side_effect = fake_fork
-        self.assertRaises(
+        exc = self.assertRaises(
                 daemon.daemon.DaemonProcessDetachError,
                 daemon.daemon.detach_process_context)
+        self.assertEqual(test_error, exc.__cause__)
         self.mock_module_os.assert_has_calls([
                 mock.call.fork(),
                 ])
@@ -1419,20 +1475,21 @@ class detach_process_context_TestCase(scaffold.TestCase):
         """ Error on second fork should cause report to stderr. """
         fork_errno = 17
         fork_strerror = "Nasty stuff happened"
-        fork_error = OSError(fork_errno, fork_strerror)
-        test_pids_iter = iter([0, fork_error])
+        test_error = OSError(fork_errno, fork_strerror)
+        test_pids_iter = iter([0, test_error])
 
         def fake_fork():
-            next_item = test_pids_iter.next()
+            next_item = next(test_pids_iter)
             if isinstance(next_item, Exception):
                 raise next_item
             else:
                 return next_item
 
         self.mock_func_os_fork.side_effect = fake_fork
-        self.assertRaises(
+        exc = self.assertRaises(
                 daemon.daemon.DaemonProcessDetachError,
                 daemon.daemon.detach_process_context)
+        self.assertEqual(test_error, exc.__cause__)
         self.mock_module_os.assert_has_calls([
                 mock.call.fork(),
                 mock.call.setsid(),
@@ -1630,8 +1687,6 @@ class redirect_stream_TestCase(scaffold.TestCase):
         """ Set up test fixtures. """
         super(redirect_stream_TestCase, self).setUp()
 
-        setup_streams_fixtures(self)
-
         self.test_system_stream = FakeFileDescriptorStringIO()
         self.test_target_stream = FakeFileDescriptorStringIO()
         self.test_null_file = FakeFileDescriptorStringIO()
@@ -1640,7 +1695,7 @@ class redirect_stream_TestCase(scaffold.TestCase):
             if path == os.devnull:
                 result = self.test_null_file.fileno()
             else:
-                raise OSError(errno.NOENT, "No such file", path)
+                raise FileNotFoundError("No such file", path)
             return result
 
         func_patcher_os_open = mock.patch.object(
@@ -1681,7 +1736,9 @@ class make_default_signal_map_TestCase(scaffold.TestCase):
         """ Set up test fixtures. """
         super(make_default_signal_map_TestCase, self).setUp()
 
-        self.fake_signal_module = ModuleType(b'signal')
+        # Use whatever default string type this Python version needs.
+        signal_module_name = str('signal')
+        self.fake_signal_module = ModuleType(signal_module_name)
 
         fake_signal_names = [
                 'SIGHUP',
@@ -1708,7 +1765,7 @@ class make_default_signal_map_TestCase(scaffold.TestCase):
                 }
         self.default_signal_map = dict(
                 (getattr(self.fake_signal_module, name), target)
-                for (name, target) in default_signal_map_by_name.iteritems())
+                for (name, target) in default_signal_map_by_name.items())
 
     def test_returns_constructed_signal_map(self):
         """ Should return map per default. """
@@ -1751,7 +1808,7 @@ class set_signal_handlers_TestCase(scaffold.TestCase):
         signal_handler_map = self.signal_handler_map
         expected_calls = [
                 mock.call(signal_number, handler)
-                for (signal_number, handler) in signal_handler_map.iteritems()]
+                for (signal_number, handler) in signal_handler_map.items()]
         daemon.daemon.set_signal_handlers(signal_handler_map)
         self.assertEquals(expected_calls, mock_func_signal_signal.mock_calls)
 

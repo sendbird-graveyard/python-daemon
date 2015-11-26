@@ -3,7 +3,7 @@
 # test/test_runner.py
 # Part of ‘python-daemon’, an implementation of PEP 3143.
 #
-# Copyright © 2009–2014 Ben Finney <ben+python@benfinney.id.au>
+# Copyright © 2009–2015 Ben Finney <ben+python@benfinney.id.au>
 #
 # This is free software: you may copy, modify, and/or distribute this work
 # under the terms of the Apache License, version 2.0 as published by the
@@ -13,64 +13,80 @@
 """ Unit test for ‘runner’ module.
     """
 
-from __future__ import unicode_literals
+from __future__ import (absolute_import, unicode_literals)
 
-import __builtin__ as builtins
+try:
+    # Python 3 standard library.
+    import builtins
+except ImportError:
+    # Python 2 standard library.
+    import __builtin__ as builtins
 import os
 import os.path
 import sys
 import tempfile
 import errno
 import signal
+import functools
 
 import lockfile
 import mock
+import testtools
 
-import scaffold
-from test_pidfile import (
+from . import scaffold
+from .scaffold import (basestring, unicode)
+from .test_pidfile import (
         FakeFileDescriptorStringIO,
         setup_pidfile_fixtures,
         make_pidlockfile_scenarios,
         apply_lockfile_method_mocks,
         )
-from test_daemon import (
+from .test_daemon import (
         setup_streams_fixtures,
         )
-import daemon.daemon
 
-from daemon import pidfile
-from daemon import runner
+import daemon.daemon
+import daemon.runner
+import daemon.pidfile
 
 
 class ModuleExceptions_TestCase(scaffold.Exception_TestCase):
     """ Test cases for module exception classes. """
 
     scenarios = scaffold.make_exception_scenarios([
-            ('runner.DaemonRunnerError', dict(
-                exc_type = runner.DaemonRunnerError,
+            ('daemon.runner.DaemonRunnerError', dict(
+                exc_type = daemon.runner.DaemonRunnerError,
                 min_args = 1,
                 types = [Exception],
                 )),
-            ('runner.DaemonRunnerInvalidActionError', dict(
-                exc_type = runner.DaemonRunnerInvalidActionError,
+            ('daemon.runner.DaemonRunnerInvalidActionError', dict(
+                exc_type = daemon.runner.DaemonRunnerInvalidActionError,
                 min_args = 1,
-                types = [runner.DaemonRunnerError, ValueError],
+                types = [daemon.runner.DaemonRunnerError, ValueError],
                 )),
-            ('runner.DaemonRunnerStartFailureError', dict(
-                exc_type = runner.DaemonRunnerStartFailureError,
+            ('daemon.runner.DaemonRunnerStartFailureError', dict(
+                exc_type = daemon.runner.DaemonRunnerStartFailureError,
                 min_args = 1,
-                types = [runner.DaemonRunnerError, RuntimeError],
+                types = [daemon.runner.DaemonRunnerError, RuntimeError],
                 )),
-            ('runner.DaemonRunnerStopFailureError', dict(
-                exc_type = runner.DaemonRunnerStopFailureError,
+            ('daemon.runner.DaemonRunnerStopFailureError', dict(
+                exc_type = daemon.runner.DaemonRunnerStopFailureError,
                 min_args = 1,
-                types = [runner.DaemonRunnerError, RuntimeError],
+                types = [daemon.runner.DaemonRunnerError, RuntimeError],
                 )),
             ])
 
 
 def make_runner_scenarios():
-    """ Make a collection of scenarios for testing DaemonRunner instances. """
+    """ Make a collection of scenarios for testing `DaemonRunner` instances.
+
+        :return: A collection of scenarios for tests involving
+            `DaemonRunner` instances.
+
+        The collection is a mapping from scenario name to a dictionary of
+        scenario attributes.
+
+        """
 
     pidlockfile_scenarios = make_pidlockfile_scenarios()
 
@@ -83,7 +99,7 @@ def make_runner_scenarios():
                 },
             }
 
-    for scenario in scenarios.itervalues():
+    for scenario in scenarios.values():
         if 'pidlockfile_scenario_name' in scenario:
             pidlockfile_scenario = pidlockfile_scenarios.pop(
                     scenario['pidlockfile_scenario_name'])
@@ -96,7 +112,15 @@ def make_runner_scenarios():
 
 
 def set_runner_scenario(testcase, scenario_name):
-    """ Set the DaemonRunner test scenario for the test case. """
+    """ Set the DaemonRunner test scenario for the test case.
+
+        :param testcase: The `TestCase` instance to decorate.
+        :param scenario_name: The name of the scenario to use.
+
+        Set the `DaemonRunner` test scenario name and decorate the
+        `testcase` with the corresponding scenario fixtures.
+
+        """
     scenarios = testcase.runner_scenarios
     testcase.scenario = scenarios[scenario_name]
     apply_lockfile_method_mocks(
@@ -106,7 +130,14 @@ def set_runner_scenario(testcase, scenario_name):
 
 
 def setup_runner_fixtures(testcase):
-    """ Set up common test fixtures for DaemonRunner test case. """
+    """ Set up common fixtures for `DaemonRunner` test cases.
+
+        :param testcase: A `TestCase` instance to decorate.
+
+        Decorate the `testcase` with attributes to be fixtures for tests
+        involving `DaemonRunner` instances.
+
+        """
     setup_pidfile_fixtures(testcase)
     setup_streams_fixtures(testcase)
 
@@ -121,7 +152,7 @@ def setup_runner_fixtures(testcase):
     simple_scenario = testcase.runner_scenarios['simple']
 
     testcase.mock_runner_lockfile = mock.MagicMock(
-            spec=pidfile.TimeoutPIDLockFile)
+            spec=daemon.pidfile.TimeoutPIDLockFile)
     apply_lockfile_method_mocks(
             testcase.mock_runner_lockfile,
             testcase,
@@ -129,7 +160,7 @@ def setup_runner_fixtures(testcase):
     testcase.mock_runner_lockfile.path = simple_scenario['pidfile_path']
 
     patcher_lockfile_class = mock.patch.object(
-            pidfile, "TimeoutPIDLockFile",
+            daemon.pidfile, "TimeoutPIDLockFile",
             return_value=testcase.mock_runner_lockfile)
     patcher_lockfile_class.start()
     testcase.addCleanup(patcher_lockfile_class.stop)
@@ -147,10 +178,10 @@ def setup_runner_fixtures(testcase):
 
     testcase.TestApp = TestApp
 
-    patcher_daemoncontext = mock.patch.object(
+    patcher_runner_daemoncontext = mock.patch.object(
             daemon.runner, "DaemonContext", autospec=True)
-    patcher_daemoncontext.start()
-    testcase.addCleanup(patcher_daemoncontext.stop)
+    patcher_runner_daemoncontext.start()
+    testcase.addCleanup(patcher_runner_daemoncontext.stop)
 
     testcase.test_app = testcase.TestApp()
 
@@ -175,8 +206,8 @@ def setup_runner_fixtures(testcase):
     mock_open = mock.mock_open()
     mock_open.side_effect = fake_open
 
-    func_patcher_builtin_open = mock.patch(
-            "__builtin__.open",
+    func_patcher_builtin_open = mock.patch.object(
+            builtins, "open",
             new=mock_open)
     func_patcher_builtin_open.start()
     testcase.addCleanup(func_patcher_builtin_open.stop)
@@ -191,7 +222,7 @@ def setup_runner_fixtures(testcase):
     patcher_sys_argv.start()
     testcase.addCleanup(patcher_sys_argv.stop)
 
-    testcase.test_instance = runner.DaemonRunner(testcase.test_app)
+    testcase.test_instance = daemon.runner.DaemonRunner(testcase.test_app)
 
     testcase.scenario = NotImplemented
 
@@ -215,16 +246,16 @@ class DaemonRunner_TestCase(DaemonRunner_BaseTestCase):
         super(DaemonRunner_TestCase, self).setUp()
 
         func_patcher_parse_args = mock.patch.object(
-                runner.DaemonRunner, "parse_args")
+                daemon.runner.DaemonRunner, "parse_args")
         func_patcher_parse_args.start()
         self.addCleanup(func_patcher_parse_args.stop)
 
         # Create a new instance now with our custom patches.
-        self.test_instance = runner.DaemonRunner(self.test_app)
+        self.test_instance = daemon.runner.DaemonRunner(self.test_app)
 
     def test_instantiate(self):
         """ New instance of DaemonRunner should be created. """
-        self.assertIsInstance(self.test_instance, runner.DaemonRunner)
+        self.assertIsInstance(self.test_instance, daemon.runner.DaemonRunner)
 
     def test_parses_commandline_args(self):
         """ Should parse commandline arguments. """
@@ -239,7 +270,7 @@ class DaemonRunner_TestCase(DaemonRunner_BaseTestCase):
         pidfile_path = None
         self.test_app.pidfile_path = pidfile_path
         expected_pidfile = None
-        instance = runner.DaemonRunner(self.test_app)
+        instance = daemon.runner.DaemonRunner(self.test_app)
         self.assertIs(expected_pidfile, instance.pidfile)
 
     def test_error_when_pidfile_path_not_string(self):
@@ -249,7 +280,7 @@ class DaemonRunner_TestCase(DaemonRunner_BaseTestCase):
         expected_error = ValueError
         self.assertRaises(
                 expected_error,
-                runner.DaemonRunner, self.test_app)
+                daemon.runner.DaemonRunner, self.test_app)
 
     def test_error_when_pidfile_path_not_absolute(self):
         """ Should raise ValueError when PID file path not absolute. """
@@ -258,13 +289,13 @@ class DaemonRunner_TestCase(DaemonRunner_BaseTestCase):
         expected_error = ValueError
         self.assertRaises(
                 expected_error,
-                runner.DaemonRunner, self.test_app)
+                daemon.runner.DaemonRunner, self.test_app)
 
     def test_creates_lock_with_specified_parameters(self):
         """ Should create a TimeoutPIDLockFile with specified params. """
         pidfile_path = self.scenario['pidfile_path']
         pidfile_timeout = self.scenario['pidfile_timeout']
-        pidfile.TimeoutPIDLockFile.assert_called_with(
+        daemon.pidfile.TimeoutPIDLockFile.assert_called_with(
                 pidfile_path, pidfile_timeout)
 
     def test_has_created_pidfile(self):
@@ -290,7 +321,7 @@ class DaemonRunner_TestCase(DaemonRunner_BaseTestCase):
 
     def test_daemon_context_has_stdin_in_read_mode(self):
         """ DaemonContext component should open stdin file for read. """
-        expected_mode = 'r'
+        expected_mode = 'rt'
         daemon_context = self.test_instance.daemon_context
         self.assertIn(expected_mode, daemon_context.stdin.mode)
 
@@ -303,7 +334,7 @@ class DaemonRunner_TestCase(DaemonRunner_BaseTestCase):
 
     def test_daemon_context_has_stdout_in_append_mode(self):
         """ DaemonContext component should open stdout file for append. """
-        expected_mode = 'w+'
+        expected_mode = 'w+t'
         daemon_context = self.test_instance.daemon_context
         self.assertIn(expected_mode, daemon_context.stdout.mode)
 
@@ -316,7 +347,7 @@ class DaemonRunner_TestCase(DaemonRunner_BaseTestCase):
 
     def test_daemon_context_has_stderr_in_append_mode(self):
         """ DaemonContext component should open stderr file for append. """
-        expected_mode = 'w+'
+        expected_mode = 'w+t'
         daemon_context = self.test_instance.daemon_context
         self.assertIn(expected_mode, daemon_context.stderr.mode)
 
@@ -342,11 +373,11 @@ class DaemonRunner_usage_exit_TestCase(DaemonRunner_BaseTestCase):
     def test_message_follows_conventional_format(self):
         """ Should emit a conventional usage message. """
         instance = self.test_instance
-        progname = self.test_program_name
         argv = [self.test_program_path]
         expected_stderr_output = """\
-                usage: %(progname)s ...
-                """ % vars()
+                usage: {progname} ...
+                """.format(
+                    progname=self.test_program_name)
         self.assertRaises(
                 SystemExit,
                 instance._usage_exit, argv)
@@ -371,10 +402,9 @@ class DaemonRunner_parse_args_TestCase(DaemonRunner_BaseTestCase):
         """ Should emit a usage message and exit if too few arguments. """
         instance = self.test_instance
         argv = [self.test_program_path]
-        try:
-            instance.parse_args(argv)
-        except NotImplementedError:
-            pass
+        exc = self.assertRaises(
+                NotImplementedError,
+                instance.parse_args, argv)
         daemon.runner.DaemonRunner._usage_exit.assert_called_with(argv)
 
     def test_emits_usage_message_if_unknown_action_arg(self):
@@ -382,10 +412,9 @@ class DaemonRunner_parse_args_TestCase(DaemonRunner_BaseTestCase):
         instance = self.test_instance
         progname = self.test_program_name
         argv = [self.test_program_path, 'bogus']
-        try:
-            instance.parse_args(argv)
-        except NotImplementedError:
-            pass
+        exc = self.assertRaises(
+                NotImplementedError,
+                instance.parse_args, argv)
         daemon.runner.DaemonRunner._usage_exit.assert_called_with(argv)
 
     def test_should_parse_system_argv_by_default(self):
@@ -400,12 +429,18 @@ class DaemonRunner_parse_args_TestCase(DaemonRunner_BaseTestCase):
     def test_sets_action_from_first_argument(self):
         """ Should set action from first commandline argument. """
         instance = self.test_instance
-        for name, argv in self.valid_argv_params.iteritems():
+        for name, argv in self.valid_argv_params.items():
             expected_action = name
             instance.parse_args(argv)
             self.assertEqual(expected_action, instance.action)
 
 
+try:
+    ProcessLookupError
+except NameError:
+    # Python 2 uses OSError.
+    ProcessLookupError = functools.partial(OSError, errno.ESRCH)
+
 class DaemonRunner_do_action_TestCase(DaemonRunner_BaseTestCase):
     """ Test cases for DaemonRunner.do_action method. """
 
@@ -413,7 +448,7 @@ class DaemonRunner_do_action_TestCase(DaemonRunner_BaseTestCase):
         """ Should emit a usage message and exit if action is unknown. """
         instance = self.test_instance
         instance.action = 'bogus'
-        expected_error = runner.DaemonRunnerInvalidActionError
+        expected_error = daemon.runner.DaemonRunnerInvalidActionError
         self.assertRaises(
                 expected_error,
                 instance.do_action)
@@ -434,16 +469,12 @@ class DaemonRunner_do_action_start_TestCase(DaemonRunner_BaseTestCase):
         instance = self.test_instance
         instance.daemon_context.open.side_effect = lockfile.AlreadyLocked
         pidfile_path = self.scenario['pidfile_path']
-        expected_error = runner.DaemonRunnerStartFailureError
+        expected_error = daemon.runner.DaemonRunnerStartFailureError
         expected_message_content = pidfile_path
-        try:
-            instance.do_action()
-        except expected_error as exc:
-            pass
-        else:
-            raise self.failureException(
-                    "Failed to raise " + expected_error.__name__)
-        self.assertIn(expected_message_content, unicode(exc.message))
+        exc = self.assertRaises(
+                expected_error,
+                instance.do_action)
+        self.assertIn(expected_message_content, unicode(exc))
 
     def test_breaks_lock_if_no_such_process(self):
         """ Should request breaking lock if PID file process is not running. """
@@ -454,7 +485,7 @@ class DaemonRunner_do_action_start_TestCase(DaemonRunner_BaseTestCase):
         pidfile_path = self.scenario['pidfile_path']
         test_pid = self.scenario['pidlockfile_scenario']['pidfile_pid']
         expected_signal = signal.SIG_DFL
-        test_error = OSError(errno.ESRCH, "Not running")
+        test_error = ProcessLookupError("Not running")
         os.kill.side_effect = test_error
         instance.do_action()
         os.kill.assert_called_with(test_pid, expected_signal)
@@ -469,10 +500,10 @@ class DaemonRunner_do_action_start_TestCase(DaemonRunner_BaseTestCase):
     def test_emits_start_message_to_stderr(self):
         """ Should emit start message to stderr. """
         instance = self.test_instance
-        current_pid = self.scenario['pid']
         expected_stderr = """\
-                started with pid %(current_pid)d
-                """ % vars()
+                started with pid {pid:d}
+                """.format(
+                    pid=self.scenario['pid'])
         instance.do_action()
         self.assertOutputCheckerMatch(
                 expected_stderr, self.fake_stderr.getvalue())
@@ -509,15 +540,11 @@ class DaemonRunner_do_action_stop_TestCase(DaemonRunner_BaseTestCase):
         self.mock_runner_lockfile.read_pid.return_value = (
                 self.scenario['pidlockfile_scenario']['pidfile_pid'])
         pidfile_path = self.scenario['pidfile_path']
-        expected_error = runner.DaemonRunnerStopFailureError
+        expected_error = daemon.runner.DaemonRunnerStopFailureError
         expected_message_content = pidfile_path
-        try:
-            instance.do_action()
-        except expected_error as exc:
-            pass
-        else:
-            raise self.failureException(
-                    "Failed to raise " + expected_error.__name__)
+        exc = self.assertRaises(
+                expected_error,
+                instance.do_action)
         self.assertIn(expected_message_content, unicode(exc))
 
     def test_breaks_lock_if_pidfile_stale(self):
@@ -546,15 +573,11 @@ class DaemonRunner_do_action_stop_TestCase(DaemonRunner_BaseTestCase):
         pidfile_path = self.scenario['pidfile_path']
         test_error = OSError(errno.EPERM, "Nice try")
         os.kill.side_effect = test_error
-        expected_error = runner.DaemonRunnerStopFailureError
+        expected_error = daemon.runner.DaemonRunnerStopFailureError
         expected_message_content = unicode(test_pid)
-        try:
-            instance.do_action()
-        except expected_error as exc:
-            pass
-        else:
-            raise self.failureException(
-                    "Failed to raise " + expected_error.__name__)
+        exc = self.assertRaises(
+                expected_error,
+                instance.do_action)
         self.assertIn(expected_message_content, unicode(exc))
 
 
@@ -579,6 +602,70 @@ class DaemonRunner_do_action_restart_TestCase(DaemonRunner_BaseTestCase):
         instance.do_action()
         mock_func_daemonrunner_start.assert_called_with()
         mock_func_daemonrunner_stop.assert_called_with()
+
+
+@mock.patch.object(sys, "stderr")
+class emit_message_TestCase(scaffold.TestCase):
+    """ Test cases for ‘emit_message’ function. """
+
+    def test_writes_specified_message_to_stream(self, mock_stderr):
+        """ Should write specified message to stream. """
+        test_message = self.getUniqueString()
+        expected_content = "{message}\n".format(message=test_message)
+        daemon.runner.emit_message(test_message, stream=mock_stderr)
+        mock_stderr.write.assert_called_with(expected_content)
+
+    def test_writes_to_specified_stream(self, mock_stderr):
+        """ Should write message to specified stream. """
+        test_message = self.getUniqueString()
+        mock_stream = mock.MagicMock()
+        daemon.runner.emit_message(test_message, stream=mock_stream)
+        mock_stream.write.assert_called_with(mock.ANY)
+
+    def test_writes_to_stderr_by_default(self, mock_stderr):
+        """ Should write message to ‘sys.stderr’ by default. """
+        test_message = self.getUniqueString()
+        daemon.runner.emit_message(test_message)
+        mock_stderr.write.assert_called_with(mock.ANY)
+
+
+class is_pidfile_stale_TestCase(scaffold.TestCase):
+    """ Test cases for ‘is_pidfile_stale’ function. """
+
+    def setUp(self):
+        """ Set up test fixtures. """
+        super(is_pidfile_stale_TestCase, self).setUp()
+
+        func_patcher_os_kill = mock.patch.object(os, "kill")
+        func_patcher_os_kill.start()
+        self.addCleanup(func_patcher_os_kill.stop)
+        os.kill.return_value = None
+
+        self.test_pid = self.getUniqueInteger()
+        self.test_pidfile = mock.MagicMock(daemon.pidfile.TimeoutPIDLockFile)
+        self.test_pidfile.read_pid.return_value = self.test_pid
+
+    def test_returns_false_if_no_pid_in_file(self):
+        """ Should return False if the pidfile contains no PID. """
+        self.test_pidfile.read_pid.return_value = None
+        expected_result = False
+        result = daemon.runner.is_pidfile_stale(self.test_pidfile)
+        self.assertEqual(expected_result, result)
+
+    def test_returns_false_if_process_exists(self):
+        """ Should return False if the process with its PID exists. """
+        expected_result = False
+        result = daemon.runner.is_pidfile_stale(self.test_pidfile)
+        self.assertEqual(expected_result, result)
+
+    def test_returns_true_if_process_does_not_exist(self):
+        """ Should return True if the process does not exist. """
+        test_error = ProcessLookupError("No such process")
+        del os.kill.return_value
+        os.kill.side_effect = test_error
+        expected_result = True
+        result = daemon.runner.is_pidfile_stale(self.test_pidfile)
+        self.assertEqual(expected_result, result)
 
 
 # Local variables:

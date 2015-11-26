@@ -1,5 +1,7 @@
 ./dist
 ./build
+*.egg
 *.egg-info
 ./daemon/version_info.json
-.coverage
+./.coverage
+./htmlcov

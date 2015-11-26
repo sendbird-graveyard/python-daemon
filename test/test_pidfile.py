@@ -3,7 +3,7 @@
 # test/test_pidfile.py
 # Part of ‘python-daemon’, an implementation of PEP 3143.
 #
-# Copyright © 2008–2014 Ben Finney <ben+python@benfinney.id.au>
+# Copyright © 2008–2015 Ben Finney <ben+python@benfinney.id.au>
 #
 # This is free software: you may copy, modify, and/or distribute this work
 # under the terms of the Apache License, version 2.0 as published by the
@@ -13,21 +13,32 @@
 """ Unit test for ‘pidfile’ module.
     """
 
-from __future__ import unicode_literals
+from __future__ import (absolute_import, unicode_literals)
 
+try:
+    # Python 3 standard library.
+    import builtins
+except ImportError:
+    # Python 2 standard library.
+    import __builtin__ as builtins
 import os
-from StringIO import StringIO
 import itertools
 import tempfile
 import errno
+import functools
+try:
+    # Standard library of Python 2.7 and later.
+    from io import StringIO
+except ImportError:
+    # Standard library of Python 2.6 and earlier.
+    from StringIO import StringIO
 
 import mock
 import lockfile
-from lockfile import pidlockfile
 
-import scaffold
+from . import scaffold
 
-from daemon import pidfile
+import daemon.pidfile
 
 
 class FakeFileDescriptorStringIO(StringIO, object):
@@ -36,8 +47,8 @@ class FakeFileDescriptorStringIO(StringIO, object):
     _fileno_generator = itertools.count()
 
     def __init__(self, *args, **kwargs):
-        self._fileno = self._fileno_generator.next()
-        StringIO.__init__(self, *args, **kwargs)
+        self._fileno = next(self._fileno_generator)
+        super(FakeFileDescriptorStringIO, self).__init__(*args, **kwargs)
 
     def fileno(self):
         return self._fileno
@@ -49,8 +60,25 @@ class FakeFileDescriptorStringIO(StringIO, object):
         pass
 
 
+try:
+    FileNotFoundError
+    PermissionError
+except NameError:
+    # Python 2 uses IOError.
+    FileNotFoundError = functools.partial(IOError, errno.ENOENT)
+    PermissionError = functools.partial(IOError, errno.EPERM)
+
+
 def make_pidlockfile_scenarios():
-    """ Make a collection of scenarios for testing PIDLockFile instances. """
+    """ Make a collection of scenarios for testing `PIDLockFile` instances.
+
+        :return: A collection of scenarios for tests involving
+            `PIDLockfFile` instances.
+
+        The collection is a mapping from scenario name to a dictionary of
+        scenario attributes.
+
+        """
 
     fake_current_pid = 235
     fake_other_pid = 8642
@@ -58,9 +86,9 @@ def make_pidlockfile_scenarios():
 
     fake_pidfile_empty = FakeFileDescriptorStringIO()
     fake_pidfile_current_pid = FakeFileDescriptorStringIO(
-            "%(fake_current_pid)d\n" % vars())
+            "{pid:d}\n".format(pid=fake_current_pid))
     fake_pidfile_other_pid = FakeFileDescriptorStringIO(
-            "%(fake_other_pid)d\n" % vars())
+            "{pid:d}\n".format(pid=fake_other_pid))
     fake_pidfile_bogus = FakeFileDescriptorStringIO(
             "b0gUs")
 
@@ -111,7 +139,7 @@ def make_pidlockfile_scenarios():
                 },
             }
 
-    for scenario in scenarios.itervalues():
+    for scenario in scenarios.values():
         scenario['pid'] = fake_current_pid
         scenario['pidfile_path'] = fake_pidfile_path
         if 'pidfile' not in scenario:
@@ -129,7 +157,14 @@ def make_pidlockfile_scenarios():
 
 
 def setup_pidfile_fixtures(testcase):
-    """ Set up common fixtures for PID file test cases. """
+    """ Set up common fixtures for PID file test cases.
+
+        :param testcase: A `TestCase` instance to decorate.
+
+        Decorate the `testcase` with attributes to be fixtures for tests
+        involving `PIDLockFile` instances.
+
+        """
     scenarios = make_pidlockfile_scenarios()
     testcase.pidlockfile_scenarios = scenarios
 
@@ -150,17 +185,21 @@ def setup_pidfile_fixtures(testcase):
     def make_fake_open_funcs(testcase):
 
         def fake_open_nonexist(filename, mode, buffering):
-            if 'r' in mode:
-                raise IOError(
-                        errno.ENOENT, "No such file %(filename)r" % vars())
+            if mode.startswith('r'):
+                error = FileNotFoundError(
+                        "No such file {filename!r}".format(
+                            filename=filename))
+                raise error
             else:
                 result = testcase.scenario['pidfile']
             return result
 
         def fake_open_read_denied(filename, mode, buffering):
-            if 'r' in mode:
-                raise IOError(
-                        errno.EPERM, "Read denied on %(filename)r" % vars())
+            if mode.startswith('r'):
+                error = PermissionError(
+                        "Read denied on {filename!r}".format(
+                            filename=filename))
+                raise error
             else:
                 result = testcase.scenario['pidfile']
             return result
@@ -173,16 +212,20 @@ def setup_pidfile_fixtures(testcase):
             if (flags & os.O_CREAT):
                 result = testcase.scenario['pidfile'].fileno()
             else:
-                raise OSError(
-                        errno.ENOENT, "No such file %(filename)r" % vars())
+                error = FileNotFoundError(
+                        "No such file {filename!r}".format(
+                            filename=filename))
+                raise error
             return result
 
         def fake_os_open_read_denied(filename, flags, mode):
             if (flags & os.O_CREAT):
                 result = testcase.scenario['pidfile'].fileno()
             else:
-                raise OSError(
-                        errno.EPERM, "Read denied on %(filename)r" % vars())
+                error = PermissionError(
+                        "Read denied on {filename!r}".format(
+                            filename=filename))
+                raise error
             return result
 
         def fake_os_open_okay(filename, flags, mode):
@@ -190,14 +233,14 @@ def setup_pidfile_fixtures(testcase):
             return result
 
         funcs = dict(
-                (name, obj) for (name, obj) in vars().iteritems()
-                if hasattr(obj, '__call__'))
+                (name, obj) for (name, obj) in vars().items()
+                if callable(obj))
 
         return funcs
 
     testcase.fake_pidfile_open_funcs = make_fake_open_funcs(testcase)
 
-    def fake_open(filename, mode='r', buffering=None):
+    def fake_open(filename, mode='rt', buffering=None):
         scenario_path = get_scenario_option(testcase, 'pidfile_path')
         if filename == scenario_path:
             func_name = testcase.scenario['open_func_name']
@@ -210,8 +253,8 @@ def setup_pidfile_fixtures(testcase):
     mock_open = mock.mock_open()
     mock_open.side_effect = fake_open
 
-    func_patcher_builtin_open = mock.patch(
-            "__builtin__.open",
+    func_patcher_builtin_open = mock.patch.object(
+            builtins, "open",
             new=mock_open)
     func_patcher_builtin_open.start()
     testcase.addCleanup(func_patcher_builtin_open.stop)
@@ -234,7 +277,7 @@ def setup_pidfile_fixtures(testcase):
     func_patcher_os_open.start()
     testcase.addCleanup(func_patcher_os_open.stop)
 
-    def fake_os_fdopen(fd, mode='r', buffering=None):
+    def fake_os_fdopen(fd, mode='rt', buffering=None):
         scenario_pidfile = get_scenario_option(
                 testcase, 'pidfile', FakeFileDescriptorStringIO())
         if fd == testcase.scenario['pidfile'].fileno():
@@ -253,7 +296,15 @@ def setup_pidfile_fixtures(testcase):
 
 
 def make_lockfile_method_fakes(scenario):
-    """ Make common fake methods for lockfile class. """
+    """ Make common fake methods for lockfile class.
+
+        :param scenario: A scenario for testing with PIDLockFile.
+        :return: A mapping from normal function name to the corresponding
+            fake function.
+
+        Each fake function behaves appropriately for the specified `scenario`.
+
+        """
 
     def fake_func_read_pid():
         return scenario['pidfile_pid']
@@ -279,21 +330,32 @@ def make_lockfile_method_fakes(scenario):
             (
                 func_name.replace('fake_func_', ''),
                 mock.MagicMock(side_effect=fake_func))
-            for (func_name, fake_func) in vars().iteritems()
+            for (func_name, fake_func) in vars().items()
                 if func_name.startswith('fake_func_'))
 
     return fake_methods
 
 
 def apply_lockfile_method_mocks(mock_lockfile, testcase, scenario):
-    """ Apply common fake methods to mock lockfile class. """
+    """ Apply common fake methods to mock lockfile class.
+
+        :param mock_lockfile: An object providing the `LockFile` interface.
+        :param testcase: The `TestCase` instance providing the context for
+            the patch.
+        :param scenario: The `PIDLockFile` test scenario to use.
+
+        Mock the `LockFile` methods of `mock_lockfile`, by applying fake
+        methods customised for `scenario`. The mock is does by a patch
+        within the context of `testcase`.
+
+        """
     fake_methods = dict(
             (func_name, fake_func)
             for (func_name, fake_func) in
-                make_lockfile_method_fakes(scenario).iteritems()
+                make_lockfile_method_fakes(scenario).items()
             if func_name not in ['read_pid'])
 
-    for (func_name, fake_func) in fake_methods.iteritems():
+    for (func_name, fake_func) in fake_methods.items():
         func_patcher = mock.patch.object(
                 mock_lockfile, func_name,
                 new=fake_func)
@@ -302,7 +364,15 @@ def apply_lockfile_method_mocks(mock_lockfile, testcase, scenario):
 
 
 def setup_pidlockfile_fixtures(testcase, scenario_name=None):
-    """ Set up common fixtures for PIDLockFile test cases. """
+    """ Set up common fixtures for PIDLockFile test cases.
+
+        :param testcase: The `TestCase` instance to decorate.
+        :param scenario_name: The name of the `PIDLockFile` scenario to use.
+
+        Decorate the `testcase` with attributes that are fixtures for test
+        cases involving `PIDLockFile` instances.`
+
+        """
 
     setup_pidfile_fixtures(testcase)
 
@@ -310,7 +380,7 @@ def setup_pidlockfile_fixtures(testcase, scenario_name=None):
             'write_pid_to_pidfile',
             'remove_existing_pidfile',
             ]:
-        func_patcher = mock.patch.object(pidlockfile, func_name)
+        func_patcher = mock.patch.object(lockfile.pidlockfile, func_name)
         func_patcher.start()
         testcase.addCleanup(func_patcher.stop)
 
@@ -328,7 +398,7 @@ class TimeoutPIDLockFile_TestCase(scaffold.TestCase):
 
         for func_name in ['__init__', 'acquire']:
             func_patcher = mock.patch.object(
-                    pidlockfile.PIDLockFile, func_name)
+                    lockfile.pidlockfile.PIDLockFile, func_name)
             func_patcher.start()
             self.addCleanup(func_patcher.stop)
 
@@ -341,21 +411,21 @@ class TimeoutPIDLockFile_TestCase(scaffold.TestCase):
                 path=self.scenario['pidfile_path'],
                 acquire_timeout=self.scenario['acquire_timeout'],
                 )
-        self.test_instance = pidfile.TimeoutPIDLockFile(
+        self.test_instance = daemon.pidfile.TimeoutPIDLockFile(
                 **self.test_kwargs)
 
     def test_inherits_from_pidlockfile(self):
         """ Should inherit from PIDLockFile. """
         instance = self.test_instance
-        self.assertIsInstance(instance, pidlockfile.PIDLockFile)
+        self.assertIsInstance(instance, lockfile.pidlockfile.PIDLockFile)
 
     def test_init_has_expected_signature(self):
         """ Should have expected signature for ‘__init__’. """
         def test_func(self, path, acquire_timeout=None, *args, **kwargs): pass
-        test_func.__name__ = b'__init__'
+        test_func.__name__ = str('__init__')
         self.assertFunctionSignatureMatch(
                 test_func,
-                pidfile.TimeoutPIDLockFile.__init__)
+                daemon.pidfile.TimeoutPIDLockFile.__init__)
 
     def test_has_specified_acquire_timeout(self):
         """ Should have specified ‘acquire_timeout’ value. """
@@ -364,16 +434,16 @@ class TimeoutPIDLockFile_TestCase(scaffold.TestCase):
         self.assertEqual(expected_timeout, instance.acquire_timeout)
 
     @mock.patch.object(
-            pidlockfile.PIDLockFile, "__init__",
+            lockfile.pidlockfile.PIDLockFile, "__init__",
             autospec=True)
     def test_calls_superclass_init(self, mock_init):
         """ Should call the superclass ‘__init__’. """
         expected_path = self.test_kwargs['path']
-        instance = pidfile.TimeoutPIDLockFile(**self.test_kwargs)
+        instance = daemon.pidfile.TimeoutPIDLockFile(**self.test_kwargs)
         mock_init.assert_called_with(instance, expected_path)
 
     @mock.patch.object(
-            pidlockfile.PIDLockFile, "acquire",
+            lockfile.pidlockfile.PIDLockFile, "acquire",
             autospec=True)
     def test_acquire_uses_specified_timeout(self, mock_func_acquire):
         """ Should call the superclass ‘acquire’ with specified timeout. """
@@ -384,7 +454,7 @@ class TimeoutPIDLockFile_TestCase(scaffold.TestCase):
         mock_func_acquire.assert_called_with(instance, expected_timeout)
 
     @mock.patch.object(
-            pidlockfile.PIDLockFile, "acquire",
+            lockfile.pidlockfile.PIDLockFile, "acquire",
             autospec=True)
     def test_acquire_uses_stored_timeout_by_default(self, mock_func_acquire):
         """ Should call superclass ‘acquire’ with stored timeout by default. """

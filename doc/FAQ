@@ -2,16 +2,18 @@
 ##########################################
 
 :Author: Ben Finney <ben+python@benfinney.id.au>
-:Updated: 2014-12-16
+:Updated: 2015-01-10
 
 ..  contents::
 ..
     1  General
       1.1  What is the purpose of the ‘python-daemon’ library?
       1.2  How can I run a service communicating with a separate daemon process?
-    2  File descriptors
-      2.1  Why does the output stop after opening the daemon context?
-      2.2  How can I preserve a ‘logging’ handler's file descriptor?
+    2  Security
+      2.1  Why is the umask set to 0 by default?
+    3  File descriptors
+      3.1  Why does the output stop after opening the daemon context?
+      3.2  How can I preserve a ‘logging’ handler's file descriptor?
 
 General
 =======
@@ -66,9 +68,9 @@ access mode. So when the daemon context opens, the umask is set to an
 explicit known value.
 
 If the conventional value of 0 is too open, consider setting a value
-such as 022, 027, 077, or another specific value. Otherwise, ensure
-the daemon creates every file with an explicit access mode for the
-purpose.
+such as 0o022, 0o027, 0o077, or another specific value. Otherwise,
+ensure the daemon creates every file with an explicit access mode for
+the purpose.
 
 
 File descriptors
