@@ -4,6 +4,12 @@ Version NEXT
 :Released: FUTURE
 :Maintainer:
 
+* Add a DaemonContext option, ‘initgroups’, which specifies whether to
+  set the daemon process's supplementary groups.
+* Set the process groups using ‘os.initgroups’.
+  Thanks to Malcolm Purvis for contributing an implementation of this
+  feature.
+
 
 Version 2.0.6
 =============
@@ -383,6 +389,7 @@ Version 1.2
   Robert Niederreiter.
 * Refactor some functionality out to helper functions.
 * Begin unit test suite.
+>>>>>>> MERGE-SOURCE
 
 
 ..

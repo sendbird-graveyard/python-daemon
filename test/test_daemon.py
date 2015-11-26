@@ -17,6 +17,7 @@ from __future__ import (absolute_import, unicode_literals)
 
 import os
 import sys
+import pwd
 import tempfile
 import resource
 import errno
@@ -83,6 +84,29 @@ def setup_daemon_context_fixtures(testcase):
     testcase.fake_pidfile_path = tempfile.mktemp()
     testcase.mock_pidlockfile = mock.MagicMock()
     testcase.mock_pidlockfile.path = testcase.fake_pidfile_path
+
+    testcase.test_pwent = pwd.struct_passwd(sequence=[
+            testcase.getUniqueString(), # pw_name
+            testcase.getUniqueString(), # pw_passwd
+            testcase.getUniqueInteger(), # pw_uid
+            testcase.getUniqueInteger(), # pw_gid
+            testcase.getUniqueString(), # pw_gecos
+            testcase.getUniqueString(), # pw_dir
+            testcase.getUniqueString(), # pw_shell
+            ])
+    def fake_getpwuid(uid):
+        pwent = None
+        if uid == testcase.test_pwent.pw_uid:
+            pwent = testcase.test_pwent
+        else:
+            raise KeyError("getpwuid(): uid not found: %(uid)r" % vars())
+        return pwent
+
+    func_patcher_pwd_getpwuid = mock.patch.object(
+            pwd, "getpwuid",
+            side_effect=fake_getpwuid)
+    func_patcher_pwd_getpwuid.start()
+    testcase.addCleanup(func_patcher_pwd_getpwuid.stop)
 
     testcase.daemon_context_args = dict(
             stdin=testcase.stream_files_by_name['stdin'],
@@ -169,7 +193,7 @@ class DaemonContext_TestCase(DaemonContext_BaseTestCase):
     def test_has_specified_uid(self):
         """ Should have specified uid option. """
         args = dict(
-                uid=object(),
+                uid=self.getUniqueInteger(),
                 )
         expected_id = args['uid']
         instance = daemon.daemon.DaemonContext(**args)
@@ -185,7 +209,7 @@ class DaemonContext_TestCase(DaemonContext_BaseTestCase):
     def test_has_specified_gid(self):
         """ Should have specified gid option. """
         args = dict(
-                gid=object(),
+                gid=self.getUniqueInteger(),
                 )
         expected_id = args['gid']
         instance = daemon.daemon.DaemonContext(**args)
@@ -197,6 +221,22 @@ class DaemonContext_TestCase(DaemonContext_BaseTestCase):
         expected_id = os.getgid()
         instance = daemon.daemon.DaemonContext(**args)
         self.assertEqual(expected_id, instance.gid)
+
+    def test_has_specified_initgroups(self):
+        """ Should have specified `initgroups` option. """
+        args = dict(
+                initgroups=False,
+                )
+        expected_value = args['initgroups']
+        instance = daemon.daemon.DaemonContext(**args)
+        self.assertEqual(expected_value, instance.initgroups)
+
+    def test_has_default_initgroups(self):
+        """ Should have default `initgroups` option. """
+        args = dict()
+        expected_value = True
+        instance = daemon.daemon.DaemonContext(**args)
+        self.assertEqual(expected_value, instance.initgroups)
 
     def test_has_specified_detach_process(self):
         """ Should have specified detach_process option. """
@@ -359,7 +399,7 @@ class DaemonContext_open_TestCase(DaemonContext_BaseTestCase):
                 mock.call.prevent_core_dump(),
                 mock.call.change_file_creation_mask(mock.ANY),
                 mock.call.change_working_directory(mock.ANY),
-                mock.call.change_process_owner(mock.ANY, mock.ANY),
+                mock.call.change_process_owner(mock.ANY, mock.ANY, mock.ANY),
                 mock.call.detach_process_context(),
                 mock.call.DaemonContext._make_signal_handler_map(),
                 mock.call.set_signal_handlers(mock.ANY),
@@ -436,16 +476,18 @@ class DaemonContext_open_TestCase(DaemonContext_BaseTestCase):
         self.mock_module_daemon.change_file_creation_mask.assert_called_with(
                 umask)
 
-    def test_changes_owner_to_specified_uid_and_gid(self):
-        """ Should change process UID and GID to `uid` and `gid` options. """
+    def test_changes_owner_to_specified_uid_and_gid_and_initgroups(self):
+        """ Should change owner using `uid`, `gid`, `initgroups` options. """
         instance = self.test_instance
-        uid = object()
-        gid = object()
-        instance.uid = uid
-        instance.gid = gid
+        test_uid = self.getUniqueInteger()
+        test_gid = self.getUniqueInteger()
+        test_initgroups = object()
+        instance.uid = test_uid
+        instance.gid = test_gid
+        instance.initgroups = test_initgroups
         instance.open()
         self.mock_module_daemon.change_process_owner.assert_called_with(
-                uid, gid)
+                test_uid, test_gid, test_initgroups)
 
     def test_detaches_process_context(self):
         """ Should request detach of process context. """
@@ -992,6 +1034,7 @@ class change_file_creation_mask_TestCase(scaffold.TestCase):
         self.assertIn(unicode(test_error), unicode(exc))
 
 
+@mock.patch.object(os, "initgroups")
 @mock.patch.object(os, "setgid")
 @mock.patch.object(os, "setuid")
 class change_process_owner_TestCase(scaffold.TestCase):
@@ -1001,17 +1044,20 @@ class change_process_owner_TestCase(scaffold.TestCase):
         """ Set up test fixtures. """
         super(change_process_owner_TestCase, self).setUp()
 
-        self.test_uid = object()
-        self.test_gid = object()
+        setup_daemon_context_fixtures(self)
+
+        self.test_uid = self.test_pwent.pw_uid
+        self.test_gid = self.test_pwent.pw_gid
         self.test_args = dict(
                 uid=self.test_uid,
                 gid=self.test_gid,
                 )
 
-    def test_changes_gid_and_uid_in_order(
+    def test_sets_groups_and_uid_in_order(
             self,
-            mock_func_os_setuid, mock_func_os_setgid):
-        """ Should change process GID and UID in correct order.
+            mock_func_os_setuid, mock_func_os_setgid,
+            mock_func_os_initgroups):
+        """ Should change process groups and UID in correct order.
 
             Since the process requires appropriate privilege to use
             either of `setuid` or `setgid`, changing the UID must be
@@ -1019,39 +1065,89 @@ class change_process_owner_TestCase(scaffold.TestCase):
 
             """
         args = self.test_args
+        args['initgroups'] = True
         mock_os_module = mock.MagicMock()
         mock_os_module.attach_mock(mock_func_os_setuid, "setuid")
         mock_os_module.attach_mock(mock_func_os_setgid, "setgid")
+        mock_os_module.attach_mock(mock_func_os_initgroups, "initgroups")
+        daemon.daemon.change_process_owner(**args)
+        mock_os_module.assert_has_calls([
+                mock.call.initgroups(mock.ANY, mock.ANY),
+                mock.call.setuid(mock.ANY),
+                ])
+
+    def test_sets_gid_and_uid_in_order(
+            self,
+            mock_func_os_setuid, mock_func_os_setgid,
+            mock_func_os_initgroups):
+        """ Should set process GID and UID in correct order.
+
+            Since the process requires appropriate privilege to use
+            either of `setuid` or `setgid`, changing the UID must be
+            done last.
+
+            """
+        args = self.test_args
+        args['initgroups'] = False
+        mock_os_module = mock.MagicMock()
+        mock_os_module.attach_mock(mock_func_os_setuid, "setuid")
+        mock_os_module.attach_mock(mock_func_os_setgid, "setgid")
+        mock_os_module.attach_mock(mock_func_os_initgroups, "initgroups")
         daemon.daemon.change_process_owner(**args)
         mock_os_module.assert_has_calls([
                 mock.call.setgid(mock.ANY),
                 mock.call.setuid(mock.ANY),
                 ])
 
+    def test_specifies_username_to_initgroups(
+            self,
+            mock_func_os_setuid, mock_func_os_setgid,
+            mock_func_os_initgroups):
+        """ Should specify the UID's username to ‘os.initgroups’. """
+        args = self.test_args
+        expected_username = self.test_pwent.pw_name
+        daemon.daemon.change_process_owner(**args)
+        mock_func_os_initgroups.assert_called_with(expected_username, mock.ANY)
+
     def test_changes_group_id_to_gid(
             self,
-            mock_func_os_setuid, mock_func_os_setgid):
+            mock_func_os_setuid, mock_func_os_setgid,
+            mock_func_os_initgroups):
         """ Should change process GID to specified value. """
         args = self.test_args
-        gid = self.test_gid
+        expected_gid = self.test_gid
         daemon.daemon.change_process_owner(**args)
-        mock_func_os_setgid.assert_called_once_with(gid)
+        mock_func_os_initgroups.assert_called_once_with(mock.ANY, expected_gid)
+
+    def test_calls_setgid_when_username_not_found(
+            self,
+            mock_func_os_setuid, mock_func_os_setgid,
+            mock_func_os_initgroups):
+        """ Should call ‘os.setgid’ when no username for the UID. """
+        args = self.test_args
+        expected_gid = self.test_gid
+        pwd.getpwuid.side_effect = KeyError("No such entry")
+        daemon.daemon.change_process_owner(**args)
+        mock_func_os_setgid.assert_called_once_with(expected_gid)
 
     def test_changes_user_id_to_uid(
             self,
-            mock_func_os_setuid, mock_func_os_setgid):
+            mock_func_os_setuid, mock_func_os_setgid,
+            mock_func_os_initgroups):
         """ Should change process UID to specified value. """
         args = self.test_args
-        uid = self.test_uid
+        expected_uid = self.test_uid
         daemon.daemon.change_process_owner(**args)
-        mock_func_os_setuid.assert_called_once_with(uid)
+        mock_func_os_setuid.assert_called_once_with(expected_uid)
 
-    def test_raises_daemon_error_on_os_error_from_setgid(
+    def test_raises_daemon_error_on_os_error_from_setting_groups(
             self,
-            mock_func_os_setuid, mock_func_os_setgid):
-        """ Should raise a DaemonError on receiving an OSError from setgid. """
+            mock_func_os_setuid, mock_func_os_setgid,
+            mock_func_os_initgroups):
+        """ Should raise a DaemonError on error from setting GID. """
         args = self.test_args
         test_error = OSError(errno.EPERM, "No switching for you!")
+        mock_func_os_initgroups.side_effect = test_error
         mock_func_os_setgid.side_effect = test_error
         expected_error = daemon.daemon.DaemonOSEnvironmentError
         exc = self.assertRaises(
@@ -1061,7 +1157,8 @@ class change_process_owner_TestCase(scaffold.TestCase):
 
     def test_raises_daemon_error_on_os_error_from_setuid(
             self,
-            mock_func_os_setuid, mock_func_os_setgid):
+            mock_func_os_setuid, mock_func_os_setgid,
+            mock_func_os_initgroups):
         """ Should raise a DaemonError on receiving an OSError from setuid. """
         args = self.test_args
         test_error = OSError(errno.EPERM, "No switching for you!")
@@ -1074,7 +1171,8 @@ class change_process_owner_TestCase(scaffold.TestCase):
 
     def test_error_message_contains_original_error_message(
             self,
-            mock_func_os_setuid, mock_func_os_setgid):
+            mock_func_os_setuid, mock_func_os_setgid,
+            mock_func_os_initgroups):
         """ Should raise a DaemonError with original message. """
         args = self.test_args
         test_error = OSError(errno.EINVAL, "Whatchoo talkin' 'bout?")
