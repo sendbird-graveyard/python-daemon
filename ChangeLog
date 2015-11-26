@@ -1,8 +1,8 @@
-Version NEXT
-============
+Version 2.1.0
+=============
 
-:Released: FUTURE
-:Maintainer:
+:Released: 2015-11-26
+:Maintainer: Ben Finney <ben+python@benfinney.id.au>
 
 * Add a DaemonContext option, ‘initgroups’, which specifies whether to
   set the daemon process's supplementary groups.
