@@ -396,7 +396,6 @@ Version 1.2
   Robert Niederreiter.
 * Refactor some functionality out to helper functions.
 * Begin unit test suite.
->>>>>>> MERGE-SOURCE
 
 
 ..
