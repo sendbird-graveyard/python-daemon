@@ -201,7 +201,10 @@ class DaemonContext:
             :Default: ``False``
 
             If true, set the daemon process's supplementary groups as
-            determined for the specified `uid`.
+            determined by the specified `uid`.
+
+            This will require that the current process UID has
+            permission to change the process's owning GID.
 
         `prevent_core`
             :Default: ``True``
