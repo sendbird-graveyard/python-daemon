@@ -1121,6 +1121,16 @@ class change_process_owner_TestCase(scaffold.TestCase):
         daemon.daemon.change_process_owner(**args)
         mock_func_os_initgroups.assert_called_once_with(mock.ANY, expected_gid)
 
+    def test_changes_group_id_to_gid_using_setgid(
+            self,
+            mock_func_os_setuid, mock_func_os_setgid,
+            mock_func_os_initgroups):
+        """ Should change process GID using ‘os.setgid’. """
+        args = self.test_args
+        expected_gid = self.test_gid
+        daemon.daemon.change_process_owner(**args)
+        mock_func_os_setgid.assert_called_once_with(expected_gid)
+
     def test_calls_setgid_when_username_not_found(
             self,
             mock_func_os_setuid, mock_func_os_setgid,
