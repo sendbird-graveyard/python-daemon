@@ -234,7 +234,7 @@ class DaemonContext_TestCase(DaemonContext_BaseTestCase):
     def test_has_default_initgroups(self):
         """ Should have default `initgroups` option. """
         args = dict()
-        expected_value = True
+        expected_value = False
         instance = daemon.daemon.DaemonContext(**args)
         self.assertEqual(expected_value, instance.initgroups)
 
@@ -1105,16 +1105,18 @@ class change_process_owner_TestCase(scaffold.TestCase):
             mock_func_os_initgroups):
         """ Should specify the UID's username to ‘os.initgroups’. """
         args = self.test_args
+        args['initgroups'] = True
         expected_username = self.test_pwent.pw_name
         daemon.daemon.change_process_owner(**args)
         mock_func_os_initgroups.assert_called_with(expected_username, mock.ANY)
 
-    def test_changes_group_id_to_gid(
+    def test_sets_group_id_to_gid_using_initgroups(
             self,
             mock_func_os_setuid, mock_func_os_setgid,
             mock_func_os_initgroups):
-        """ Should change process GID to specified value. """
+        """ Should change process GID using ‘os.initgroups’. """
         args = self.test_args
+        args['initgroups'] = True
         expected_gid = self.test_gid
         daemon.daemon.change_process_owner(**args)
         mock_func_os_initgroups.assert_called_once_with(mock.ANY, expected_gid)
@@ -1125,6 +1127,7 @@ class change_process_owner_TestCase(scaffold.TestCase):
             mock_func_os_initgroups):
         """ Should call ‘os.setgid’ when no username for the UID. """
         args = self.test_args
+        args['initgroups'] = True
         expected_gid = self.test_gid
         pwd.getpwuid.side_effect = KeyError("No such entry")
         daemon.daemon.change_process_owner(**args)
