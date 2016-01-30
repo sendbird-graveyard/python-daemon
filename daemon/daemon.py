@@ -198,10 +198,13 @@ class DaemonContext:
             process.
 
         `initgroups`
-            :Default: ``True``
+            :Default: ``False``
 
-            If true, set the daemon process's supplementary groups
-            according to `uid`.
+            If true, set the daemon process's supplementary groups as
+            determined by the specified `uid`.
+
+            This will require that the current process UID has
+            permission to change the process's owning GID.
 
         `prevent_core`
             :Default: ``True``
@@ -244,7 +247,7 @@ class DaemonContext:
             umask=0,
             uid=None,
             gid=None,
-            initgroups=True,
+            initgroups=False,
             prevent_core=True,
             detach_process=None,
             files_preserve=None,
@@ -602,7 +605,7 @@ def get_username_for_uid(uid):
     return username
 
 
-def change_process_owner(uid, gid, initgroups=True):
+def change_process_owner(uid, gid, initgroups=False):
     """ Change the owning UID, GID, and groups of this process.
 
         :param uid: The target UID for the daemon process.
