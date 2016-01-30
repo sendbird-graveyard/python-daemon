@@ -1,8 +1,8 @@
-Version NEXT
-============
+Version 2.1.1
+=============
 
-:Released: FUTURE
-:Maintainer:
+:Released: 2016-01-30
+:Maintainer: Ben Finney <ben+python@benfinney.id.au>
 
 * Default ‘initgroups’ option to False. Using ‘os.initgroups’ requires
   permission to set process GID, so this now needs to be explicitly
