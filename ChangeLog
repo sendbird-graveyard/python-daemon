@@ -4,6 +4,9 @@ Version NEXT
 :Released: FUTURE
 :Maintainer:
 
+* Default ‘initgroups’ option to True only if current process owner is
+  superuser, False otherwise.
+
 
 Version 2.1.0
 =============
