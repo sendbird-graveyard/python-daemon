@@ -84,7 +84,7 @@ Documenting code
   * The first line is a one-line synopsis of the object. This summary
     line appears on the same line as the opening triple-quote,
     separated by a single space.
-  
+
   * Further lines, if needed, are separated from the first by one
     blank line.
 
@@ -97,7 +97,7 @@ Documenting code
     field names are: “param foo” for each parameter (where “foo” is
     the parameter name), and “return” for the return value. The field
     values describe the purpose of each.
-  
+
   * The closing triple-quote appears on a separate line.
 
   Example::

@@ -85,7 +85,7 @@ def parse_person_field(value):
         else:
             result = ParsedPerson(name=value, email=None)
 
-    return result    
+    return result
 
 author_name = "Ben Finney"
 author_email = "ben+python@benfinney.id.au"
