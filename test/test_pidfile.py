@@ -24,14 +24,9 @@ except ImportError:
 import os
 import itertools
 import tempfile
+import io
 import errno
 import functools
-try:
-    # Standard library of Python 2.7 and later.
-    from io import StringIO
-except ImportError:
-    # Standard library of Python 2.6 and earlier.
-    from StringIO import StringIO
 
 import mock
 import lockfile
@@ -41,7 +36,7 @@ from . import scaffold
 import daemon.pidfile
 
 
-class FakeFileDescriptorStringIO(StringIO, object):
+class FakeFileDescriptorStringIO(io.StringIO, object):
     """ A StringIO class that fakes a file descriptor. """
 
     _fileno_generator = itertools.count()

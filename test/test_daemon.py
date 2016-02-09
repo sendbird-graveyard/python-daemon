@@ -20,18 +20,13 @@ import sys
 import pwd
 import tempfile
 import resource
+import io
 import errno
 import signal
 import socket
 from types import ModuleType
 import collections
 import functools
-try:
-    # Standard library of Python 2.7 and later.
-    from io import StringIO
-except ImportError:
-    # Standard library of Python 2.6 and earlier.
-    from StringIO import StringIO
 
 import mock
 
@@ -744,16 +739,9 @@ class DaemonContext_get_exclude_file_descriptors_TestCase(
         instance = self.test_instance
         instance.files_preserve = list(self.test_files.values())
         stream_files = self.stream_files_by_name
-        mock_fileno_method = mock.MagicMock(
-                spec=sys.__stdin__.fileno,
-                side_effect=ValueError)
         expected_result = self.test_file_descriptors.copy()
         for (pseudo_stream_name, pseudo_stream) in stream_files.items():
-            test_non_fd_stream = StringIO()
-            if not hasattr(test_non_fd_stream, 'fileno'):
-                # Python < 3 StringIO doesn't have ‘fileno’ at all.
-                # Add a method which raises an exception.
-                test_non_fd_stream.fileno = mock_fileno_method
+            test_non_fd_stream = io.StringIO()
             setattr(instance, pseudo_stream_name, test_non_fd_stream)
             stream_fd = pseudo_stream.fileno()
             expected_result.discard(stream_fd)

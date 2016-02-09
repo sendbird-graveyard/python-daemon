@@ -28,12 +28,6 @@ import distutils.dist
 import distutils.cmd
 import distutils.errors
 import distutils.fancy_getopt
-try:
-    # Standard library of Python 2.7 and later.
-    from io import StringIO
-except ImportError:
-    # Standard library of Python 2.6 and earlier.
-    from StringIO import StringIO
 
 import mock
 import testtools
@@ -753,7 +747,7 @@ class changelog_to_version_info_collection_TestCase(
 
     def test_returns_expected_version_info(self):
         """ Should return expected version info mapping. """
-        infile = StringIO(self.test_input)
+        infile = io.StringIO(self.test_input)
         with self.expected_error_context():
             result = version.changelog_to_version_info_collection(infile)
         if hasattr(self, 'expected_version_info'):
@@ -781,7 +775,7 @@ class generate_version_info_from_changelog_TestCase(
 
     fake_open_side_effects = {
             'success': (
-                lambda *args, **kwargs: StringIO()),
+                lambda *args, **kwargs: io.StringIO()),
             'file not found': FileNotFoundError(),
             'permission denied': PermissionError(),
             }
@@ -816,7 +810,7 @@ class generate_version_info_from_changelog_TestCase(
                 else:
                     raise side_effect
             else:
-                result = StringIO()
+                result = io.StringIO()
             return result
 
         func_patcher_io_open = mock.patch.object(
@@ -1244,7 +1238,7 @@ class has_changelog_TestCase(
         if hasattr(self, 'changelog_path'):
             self.fake_changelog_file_path = self.changelog_path
         version.get_changelog_path.return_value = self.fake_changelog_file_path
-        self.fake_changelog_file = StringIO()
+        self.fake_changelog_file = io.StringIO()
 
         def fake_os_path_exists(path):
             if path == self.fake_changelog_file_path:
