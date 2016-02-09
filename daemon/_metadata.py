@@ -25,6 +25,7 @@ import pkg_resources
 distribution_name = "python-daemon"
 version_info_filename = "version_info.json"
 
+
 def get_distribution_version_info(filename=version_info_filename):
     """ Get the version info from the installed distribution.
 
@@ -48,8 +49,8 @@ def get_distribution_version_info(filename=version_info_filename):
         distribution = None
 
     if distribution is not None:
-        if distribution.has_metadata(version_info_filename):
-            content = distribution.get_metadata(version_info_filename)
+        if distribution.has_metadata(filename):
+            content = distribution.get_metadata(filename)
             version_info = json.loads(content)
 
     return version_info

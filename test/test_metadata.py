@@ -266,7 +266,7 @@ version_info_filename = "version_info.json"
 def fake_func_has_metadata(testcase, resource_name):
     """ Fake the behaviour of ‘pkg_resources.Distribution.has_metadata’. """
     if (
-            resource_name != testcase.expected_resource_name
+            resource_name != testcase.version_info_filename
             or not hasattr(testcase, 'test_version_info')):
         return False
     return True
@@ -319,10 +319,12 @@ class get_distribution_version_info_TestCase(scaffold.TestCaseWithScenarios):
                 'expected_version_info': {'version': "1.0"},
                 }),
             ('file lorem_ipsum.json', {
+                'test_filename': "lorem_ipsum.json",
                 'version_info_filename': "lorem_ipsum.json",
                 'test_version_info': json.dumps({
                     'version': "1.0",
                     }),
+                'expected_resource_name': "lorem_ipsum.json",
                 'expected_version_info': {'version': "1.0"},
                 }),
             ('not installed', {
@@ -332,16 +334,28 @@ class get_distribution_version_info_TestCase(scaffold.TestCaseWithScenarios):
             ('no version_info', {
                 'expected_version_info': default_version_info,
                 }),
+            ('wrong filename', {
+                'test_filename': "lorem_ipsum.json",
+                'test_version_info': json.dumps({
+                    'version': "1.0",
+                    }),
+                'expected_resource_name': "lorem_ipsum.json",
+                'expected_version_info': default_version_info,
+                }),
             ]
 
     def setUp(self):
         """ Set up test fixtures. """
         super(get_distribution_version_info_TestCase, self).setUp()
 
-        if hasattr(self, 'expected_resource_name'):
-            self.test_args = {'filename': self.expected_resource_name}
-        else:
-            self.test_args = {}
+        self.test_args = {}
+        if hasattr(self, 'test_filename'):
+            self.test_args['filename'] = self.test_filename
+
+        if not hasattr(self, 'version_info_filename'):
+            self.version_info_filename = version_info_filename
+
+        if not hasattr(self, 'expected_resource_name'):
             self.expected_resource_name = version_info_filename
 
         self.mock_distribution = mock.MagicMock()
