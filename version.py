@@ -43,6 +43,10 @@ import distutils
 import distutils.errors
 import distutils.cmd
 import distutils.version
+
+import setuptools
+import setuptools.command.egg_info
+
 try:
     # Python 2 has both ‘str’ (bytes) and ‘unicode’ (text).
     basestring = basestring
@@ -51,9 +55,6 @@ except NameError:
     # Python 3 names the Unicode data type ‘str’.
     basestring = str
     unicode = str
-
-import setuptools
-import setuptools.command.egg_info
 
 
 def ensure_class_bases_begin_with(namespace, class_name, base_class):

@@ -23,12 +23,6 @@ import sys
 import os
 import signal
 import errno
-try:
-    # Python 3 standard library.
-    ProcessLookupError
-except NameError:
-    # No such class in Python 2.
-    ProcessLookupError = NotImplemented
 
 import lockfile
 
@@ -36,6 +30,13 @@ from . import pidfile
 from .daemon import (basestring, unicode)
 from .daemon import DaemonContext
 from .daemon import _chain_exception_from_existing_exception_context
+
+try:
+    # Python 3 standard library.
+    ProcessLookupError
+except NameError:
+    # No such class in Python 2.
+    ProcessLookupError = NotImplemented
 
 
 class DaemonRunnerError(Exception):
