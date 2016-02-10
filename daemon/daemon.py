@@ -847,7 +847,7 @@ def get_maximum_file_descriptors():
     return result
 
 
-def close_all_open_files(exclude=set()):
+def close_all_open_files(exclude=None):
     """ Close all open file descriptors.
 
         :param exclude: Collection of file descriptors to skip when closing
@@ -859,6 +859,8 @@ def close_all_open_files(exclude=set()):
         close.
 
         """
+    if exclude is None:
+        exclude = set()
     maxfd = get_maximum_file_descriptors()
     for fd in reversed(range(maxfd)):
         if fd not in exclude:
