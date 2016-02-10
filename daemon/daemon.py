@@ -37,6 +37,8 @@ except NameError:
     basestring = str
     unicode = str
 
+__metaclass__ = type
+
 
 class DaemonError(Exception):
     """ Base exception class for errors from this module. """
@@ -237,8 +239,6 @@ class DaemonContext:
             file named by `os.devnull`.
 
         """
-
-    __metaclass__ = type
 
     def __init__(
             self,

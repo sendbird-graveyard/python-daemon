@@ -56,6 +56,8 @@ except NameError:
     basestring = str
     unicode = str
 
+__metaclass__ = type
+
 
 def ensure_class_bases_begin_with(namespace, class_name, base_class):
     """ Ensure the named class's bases start with the base class.

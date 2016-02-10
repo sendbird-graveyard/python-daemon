@@ -38,6 +38,8 @@ except NameError:
     # No such class in Python 2.
     ProcessLookupError = NotImplemented
 
+__metaclass__ = type
+
 
 class DaemonRunnerError(Exception):
     """ Abstract base class for errors from DaemonRunner. """
@@ -77,8 +79,6 @@ class DaemonRunner:
         * 'restart': Stop, then start.
 
         """
-
-    __metaclass__ = type
 
     start_message = "started with pid {pid:d}"
 

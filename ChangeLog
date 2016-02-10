@@ -4,6 +4,8 @@ Version NEXT
 :Released: FUTURE
 :Maintainer: UNKNOWN <unknown@example.org>
 
+* Ensure custom types are part of the Python type hierarchy.
+
 
 Version 2.1.1
 =============

@@ -46,6 +46,8 @@ version.ensure_class_bases_begin_with(
         version.__dict__, str('VersionInfoTranslator'),
         docutils.nodes.SparseNodeVisitor)
 
+__metaclass__ = type
+
 
 def make_test_classes_for_ensure_class_bases_begin_with():
     """ Make test classes for use with ‘ensure_class_bases_begin_with’.
