@@ -840,10 +840,12 @@ def get_maximum_file_descriptors():
         of ``MAXFD`` is returned.
 
         """
-    limits = resource.getrlimit(resource.RLIMIT_NOFILE)
-    result = limits[1]
-    if result == resource.RLIM_INFINITY:
+    (__, hard_limit) = resource.getrlimit(resource.RLIMIT_NOFILE)
+
+    result = hard_limit
+    if hard_limit == resource.RLIM_INFINITY:
         result = MAXFD
+
     return result
 
 
