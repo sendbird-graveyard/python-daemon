@@ -77,7 +77,7 @@ def parse_person_field(value):
         address, the `email` item is ``None``.
 
         """
-    result = (None, None)
+    result = ParsedPerson(None, None)
 
     match = rfc822_person_regex.match(value)
     if len(value):
