@@ -4,6 +4,8 @@ Version NEXT
 :Released: FUTURE
 :Maintainer: UNKNOWN <unknown@example.org>
 
+* Migrate code project hosting to Pagure.
+  Record the change of homepage URL in PyPI metadata.
 * Ensure custom types are part of the Python type hierarchy.
 
 
