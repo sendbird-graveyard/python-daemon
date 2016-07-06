@@ -145,7 +145,7 @@ copyright_year_range = make_year_range(copyright_year_begin, build_date)
 copyright = "Copyright © {year_range} {author} and others".format(
         year_range=copyright_year_range, author=author)
 license = "Apache-2"
-url = "https://alioth.debian.org/projects/python-daemon/"
+url = "https://pagure.io/python-daemon/"
 
 
 # Local variables:
