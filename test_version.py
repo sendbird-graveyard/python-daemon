@@ -19,7 +19,6 @@ import os.path
 import io
 import errno
 import functools
-import contextlib
 import collections
 import textwrap
 import json

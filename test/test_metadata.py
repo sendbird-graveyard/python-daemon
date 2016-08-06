@@ -15,7 +15,6 @@
 
 from __future__ import (absolute_import, unicode_literals)
 
-import sys
 import errno
 import re
 try:
@@ -32,10 +31,9 @@ import pkg_resources
 import mock
 import testtools.helpers
 import testtools.matchers
-import testscenarios
 
 from . import scaffold
-from .scaffold import (basestring, unicode)
+from .scaffold import unicode
 
 import daemon._metadata as metadata
 
