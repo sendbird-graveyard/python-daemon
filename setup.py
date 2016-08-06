@@ -38,16 +38,10 @@ metadata = main_module._metadata
 
 (synopsis, long_description) = pydoc.splitdoc(pydoc.getdoc(main_module))
 
-version_info = metadata.get_distribution_version_info()
-version_string = version_info['version']
-
-(maintainer_name, maintainer_email) = version.parse_person_field(
-        version_info['maintainer'])
-
 
 setup(
+        distclass=version.ChangelogAwareDistribution,
         name=metadata.distribution_name,
-        version=version_string,
         packages=find_packages(exclude=["test"]),
         cmdclass={
             "write_version_info": version.WriteVersionInfoCommand,
@@ -55,8 +49,6 @@ setup(
             },
 
         # Setuptools metadata.
-        maintainer=maintainer_name,
-        maintainer_email=maintainer_email,
         zip_safe=False,
         setup_requires=[
             "docutils",
