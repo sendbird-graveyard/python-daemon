@@ -41,7 +41,7 @@ metadata = main_module._metadata
 version_info = metadata.get_distribution_version_info()
 version_string = version_info['version']
 
-(maintainer_name, maintainer_email) = metadata.parse_person_field(
+(maintainer_name, maintainer_email) = version.parse_person_field(
         version_info['maintainer'])
 
 

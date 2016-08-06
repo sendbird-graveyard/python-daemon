@@ -15,8 +15,6 @@
 from __future__ import (absolute_import, unicode_literals)
 
 import json
-import re
-import collections
 import datetime
 
 import pkg_resources
@@ -62,34 +60,6 @@ version_info = get_distribution_version_info()
 version_installed = version_info['version']
 
 
-rfc822_person_regex = re.compile(
-        "^(?P<name>[^<]+) <(?P<email>[^>]+)>$")
-
-ParsedPerson = collections.namedtuple('ParsedPerson', ['name', 'email'])
-
-def parse_person_field(value):
-    """ Parse a person field into name and email address.
-
-        :param value: The text value specifying a person.
-        :return: A 2-tuple (name, email) for the person's details.
-
-        If the `value` does not match a standard person with email
-        address, the `email` item is ``None``.
-
-        """
-    result = ParsedPerson(None, None)
-
-    match = rfc822_person_regex.match(value)
-    if len(value):
-        if match is not None:
-            result = ParsedPerson(
-                    name=match.group('name'),
-                    email=match.group('email'))
-        else:
-            result = ParsedPerson(name=value, email=None)
-
-    return result
-
 author_name = "Ben Finney"
 author_email = "ben+python@benfinney.id.au"
 author = "{name} <{email}>".format(name=author_name, email=author_email)
