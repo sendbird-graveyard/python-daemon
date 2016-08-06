@@ -26,6 +26,8 @@ Changes:
 Bug Fixes:
 
 * Ensure custom types are part of the Python type hierarchy.
+* Avoid a circular dependency for the version string at install time.
+  Thanks to Maarten van Gompel for the reproducible test case.
 
 
 Version 2.1.1
