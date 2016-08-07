@@ -298,7 +298,6 @@ class VersionInfoTranslator(object):
     def __init__(self, document):
         super(VersionInfoTranslator, self).__init__(document)
         self.settings = document.settings
-        self.current_section_level = 0
         self.current_field_name = None
         self.content = []
         self.indent_width = 0
@@ -342,6 +341,15 @@ class VersionInfoTranslator(object):
                     node,
                     "Unexpected field within {node!r}".format(
                         node=field_list_node))
+        if not isinstance(
+                field_list_node.parent, self._docutils.nodes.section):
+            # Field list is not in a section.
+            raise self._docutils.nodes.SkipNode
+        if not self.current_field_name in self.attr_convert_funcs_by_attr_name:
+            raise InvalidFormatError(
+                    node,
+                    "Unexpected field name {name!r}".format(
+                        name=self.current_field_name))
         (attr_name, convert_func) = self.attr_convert_funcs_by_attr_name[
                 self.current_field_name]
         attr_value = convert_func(node.astext())
@@ -359,13 +367,20 @@ class VersionInfoTranslator(object):
 
     def visit_field_name(self, node):
         field_name = node.astext()
-        if self.current_section_level == 1:
-            # At a top-level section.
-            if field_name.lower() not in ["released", "maintainer"]:
-                raise InvalidFormatError(
-                        node,
-                        "Unexpected field name {name!r}".format(name=field_name))
-            self.current_field_name = field_name.lower()
+        self.current_field_name = field_name.lower()
+        field_list_node = node.parent
+        if not isinstance(
+                field_list_node.parent, self._docutils.nodes.section):
+            # Field list is not in a section.
+            raise self._docutils.nodes.SkipNode
+        if not isinstance(
+                field_list_node.parent.parent, self._docutils.nodes.Root):
+            # The section is not top-level.
+            raise self._docutils.nodes.SkipNode
+        if field_name.lower() not in ["released", "maintainer"]:
+            raise InvalidFormatError(
+                    node,
+                    "Unexpected field name {name!r}".format(name=field_name))
 
     def depart_field_name(self, node):
         pass
@@ -394,16 +409,12 @@ class VersionInfoTranslator(object):
         self.append_to_current_entry("\n")
 
     def visit_section(self, node):
-        self.current_section_level += 1
-        if self.current_section_level == 1:
-            # At a top-level section.
-            self.current_entry = ChangeLogEntry()
-        else:
+        if not isinstance(node.parent, self._docutils.nodes.Root):
             raise InvalidFormatError(
                     node, "Subsections not implemented for this writer")
+        self.current_entry = ChangeLogEntry()
 
     def depart_section(self, node):
-        self.current_section_level -= 1
         self.content.append(
                 self.current_entry.as_version_info_entry())
         self.current_entry = None
@@ -412,7 +423,6 @@ class VersionInfoTranslator(object):
 
     def depart_title(self, node):
         title_text = node.astext()
-        # At a top-level section.
         words = title_text.split(" ")
         version = None
         if len(words) != self._expected_title_word_length:
