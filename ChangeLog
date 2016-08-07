@@ -8,11 +8,11 @@ Version strings conform to the `Semantic Versioning`_ specification,
 ..  _Semantic Versioning: https://semver.org/
 
 
-Version NEXT
-============
+Version 2.2.0
+=============
 
-:Released: FUTURE
-:Maintainer: UNKNOWN <unknown@example.org>
+:Released: 2018-08-15
+:Maintainer: Ben Finney <ben+python@benfinney.id.au>
 
 Bug Fixes:
 
