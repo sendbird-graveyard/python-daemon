@@ -256,6 +256,22 @@ class ChangeLogEntry:
 class InvalidFormatError(ValueError):
     """ Raised when the document is not a valid ‘ChangeLog’ document. """
 
+    def __init__(self, node, message=None):
+        self.node = node
+        self.message = message
+
+    def __str__(self):
+        text = "{message}: {source} line {line:d}".format(
+                message=(
+                    getattr(self, 'message', "(no message)")),
+                source=(
+                    getattr(self.node, 'source', "(source unknown)")),
+                line=(
+                    getattr(self.node, 'line', "(unknown)")),
+                )
+
+        return text
+
 
 class VersionInfoTranslator(object):
     """ Translator from document nodes to a version info stream. """
@@ -323,6 +339,7 @@ class VersionInfoTranslator(object):
         field_list_node = node.parent.parent
         if not isinstance(field_list_node, self._docutils.nodes.field_list):
             raise InvalidFormatError(
+                    node,
                     "Unexpected field within {node!r}".format(
                         node=field_list_node))
         (attr_name, convert_func) = self.attr_convert_funcs_by_attr_name[
@@ -346,6 +363,7 @@ class VersionInfoTranslator(object):
             # At a top-level section.
             if field_name.lower() not in ["released", "maintainer"]:
                 raise InvalidFormatError(
+                        node,
                         "Unexpected field name {name!r}".format(name=field_name))
             self.current_field_name = field_name.lower()
 
@@ -382,7 +400,7 @@ class VersionInfoTranslator(object):
             self.current_entry = ChangeLogEntry()
         else:
             raise InvalidFormatError(
-                    "Subsections not implemented for this writer")
+                    node, "Subsections not implemented for this writer")
 
     def depart_section(self, node):
         self.current_section_level -= 1
@@ -399,9 +417,11 @@ class VersionInfoTranslator(object):
         version = None
         if len(words) != self._expected_title_word_length:
             raise InvalidFormatError(
+                    node,
                     "Unexpected title text {text!r}".format(text=title_text))
         if words[0].lower() not in ["version"]:
             raise InvalidFormatError(
+                    node,
                     "Unexpected title text {text!r}".format(text=title_text))
         version = words[-1]
         self.current_entry.version = version
