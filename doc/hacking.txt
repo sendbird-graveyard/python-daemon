@@ -2,7 +2,26 @@ Developer's guide
 #################
 
 :Author: Ben Finney <ben+python@benfinney.id.au>
-:Updated: 2015-09-27
+:Updated: 2016-10-21
+
+
+VCS repository
+==============
+
+The official Version Control System (VCS) for this code base is the
+Git repository at `the ‘python-daemon’ Pagure project`_.
+
+You can submit your proposed changes as merge requests:
+
+* Use your Pagure account and use the “pull request” feature.
+
+* Subscribe to `the ‘python-daemon-devel’ discussion forum`_ and
+  direct us to a branch in your published fork.
+
+
+..  _the ‘python-daemon’ Pagure project: https://pagure.io/python-daemon/
+..  _the ‘python-daemon-devel’ discussion forum:
+    https://lists.alioth.debian.org/mailman/listinfo/python-daemon-devel
 
 
 Project layout
