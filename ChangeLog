@@ -1,7 +1,11 @@
 This document is the `change log`_ for this distribution. It is a
 record of all notable changes in each version released.
 
+Version strings conform to the `Semantic Versioning`_ specification,
+`version 2.0.0 <http://semver.org/spec/v2.0.0.html>`__.
+
 ..  _change log: http://keepachangelog.com/
+..  _Semantic Versioning: https://semver.org/
 
 
 Version NEXT
