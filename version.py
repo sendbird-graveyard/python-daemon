@@ -41,6 +41,7 @@ import collections
 import distutils
 import distutils.errors
 import distutils.cmd
+import distutils.dist
 import distutils.version
 
 import setuptools
@@ -619,6 +620,52 @@ class WriteVersionInfoCommand(EggInfoCommand, object):
         version_info = generate_version_info_from_changelog(self.changelog_path)
         content = serialise_version_info_from_mapping(version_info)
         self.write_file("version info", self.outfile_path, content)
+
+
+class ChangelogAwareDistribution(distutils.dist.Distribution, object):
+    """ A distribution of Python code for installation.
+
+        This class gets the following attributes instead from the
+        ‘ChangeLog’ document:
+
+        * version
+        * maintainer
+        * maintainer_email
+
+        """
+
+    __metaclass__ = type
+
+    def __init__(self, *args, **kwargs):
+        super(ChangelogAwareDistribution, self).__init__(*args, **kwargs)
+
+        # Undo the per-instance delegation for these methods.
+        del (
+                self.get_version,
+                self.get_maintainer,
+                self.get_maintainer_email,
+                )
+
+    @lru_cache(maxsize=128)
+    def get_version_info(self):
+        changelog_path = get_changelog_path(self)
+        version_info = generate_version_info_from_changelog(changelog_path)
+        return version_info
+
+    def get_version(self):
+        version_info = self.get_version_info()
+        version_string = version_info['version']
+        return version_string
+
+    def get_maintainer(self):
+        version_info = self.get_version_info()
+        person = parse_person_field(version_info['maintainer'])
+        return person.name
+
+    def get_maintainer_email(self):
+        version_info = self.get_version_info()
+        person = parse_person_field(version_info['maintainer'])
+        return person.email
 
 
 # Local variables:
