@@ -22,6 +22,9 @@ Changes:
 
 * Migrate code project hosting to Pagure.
   Record the change of homepage URL in PyPI metadata.
+* Raise a warning that the ‘runner’ module is pending deprecation.
+  This has been an unofficial example module from the beginning, and
+  it will be removed in a future version.
 
 Bug Fixes:
 

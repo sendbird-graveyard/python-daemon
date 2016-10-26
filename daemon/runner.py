@@ -19,10 +19,11 @@
 
 from __future__ import (absolute_import, unicode_literals)
 
-import sys
+import errno
 import os
 import signal
-import errno
+import sys
+import warnings
 
 import lockfile
 
@@ -39,6 +40,11 @@ except NameError:
     ProcessLookupError = NotImplemented
 
 __metaclass__ = type
+
+
+warnings.warn(
+        "The ‘runner’ module is not a supported API for this library.",
+        PendingDeprecationWarning)
 
 
 class DaemonRunnerError(Exception):
