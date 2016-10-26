@@ -41,6 +41,9 @@ from __future__ import (absolute_import, unicode_literals)
 
 from .daemon import DaemonContext
 
+
+__all__ = [DaemonContext]
+
 
 # Local variables:
 # coding: utf-8
