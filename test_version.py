@@ -78,6 +78,7 @@ def make_test_classes_for_ensure_class_bases_begin_with():
 
     return result
 
+
 class ensure_class_bases_begin_with_TestCase(
         testscenarios.WithScenarios, testtools.TestCase):
     """ Test cases for ‘ensure_class_bases_begin_with’ function. """
@@ -281,7 +282,9 @@ class parse_person_field_TestCase(
 
 class NoOpContextManager:
     """ A context manager with no effect. """
+
     def __enter__(self): pass
+
     def __exit__(self, exc_type, exc_value, traceback): pass
 
 
