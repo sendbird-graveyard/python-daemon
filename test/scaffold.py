@@ -243,8 +243,8 @@ class TestCase(testtools.testcase.TestCase):
                         Expected:
                             {first_text}
                         Got:
-                            {second_text}""")
-                        ).format(
+                            {second_text}
+                        """)).format(
                             first=first_signature,
                             first_text=first_signature_text,
                             second=second_signature,
