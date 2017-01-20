@@ -449,7 +449,9 @@ class TimeoutPIDLockFile_TestCase(scaffold.TestCase):
             lockfile.pidlockfile.PIDLockFile, "acquire",
             autospec=True)
     def test_acquire_uses_stored_timeout_by_default(self, mock_func_acquire):
-        """ Should call superclass ‘acquire’ with stored timeout by default. """
+        """
+        Should call superclass ‘acquire’ with stored timeout by default.
+        """
         instance = self.test_instance
         test_timeout = self.test_kwargs['acquire_timeout']
         expected_timeout = test_timeout

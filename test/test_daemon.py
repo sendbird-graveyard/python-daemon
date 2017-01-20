@@ -665,7 +665,9 @@ class DaemonContext_terminate_TestCase(DaemonContext_BaseTestCase):
 
 class DaemonContext_get_exclude_file_descriptors_TestCase(
         DaemonContext_BaseTestCase):
-    """ Test cases for DaemonContext._get_exclude_file_descriptors function. """
+    """
+    Test cases for DaemonContext._get_exclude_file_descriptors function.
+    """
 
     def setUp(self):
         """ Set up test fixtures. """

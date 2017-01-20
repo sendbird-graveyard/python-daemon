@@ -619,7 +619,8 @@ class WriteVersionInfoCommand(EggInfoCommand, object):
 
     def run(self):
         """ Execute this command. """
-        version_info = generate_version_info_from_changelog(self.changelog_path)
+        version_info = generate_version_info_from_changelog(
+                self.changelog_path)
         content = serialise_version_info_from_mapping(version_info)
         self.write_file("version info", self.outfile_path, content)
 

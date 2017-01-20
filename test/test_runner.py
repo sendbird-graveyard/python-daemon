@@ -471,7 +471,7 @@ class DaemonRunner_do_action_start_TestCase(DaemonRunner_BaseTestCase):
         self.assertIn(expected_message_content, unicode(exc))
 
     def test_breaks_lock_if_no_such_process(self):
-        """ Should request breaking lock if PID file process is not running. """
+        """ Should request breaking lock if PID file process not running. """
         set_runner_scenario(self, 'pidfile-locked')
         instance = self.test_instance
         self.mock_runner_lockfile.read_pid.return_value = (

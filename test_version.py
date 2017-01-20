@@ -473,7 +473,9 @@ class ChangeLogEntry_as_version_info_entry_TestCase(
             ('default', {
                 'test_args': {},
                 'expected_result': collections.OrderedDict([
-                    ('release_date', version.ChangeLogEntry.default_release_date),
+                    (
+                        'release_date',
+                        version.ChangeLogEntry.default_release_date),
                     ('version', version.ChangeLogEntry.default_version),
                     ('maintainer', None),
                     ('body', None),
@@ -1168,7 +1170,8 @@ class WriteVersionInfoCommand_finalize_options_TestCase(
         """ Set up test fixtures. """
         super(WriteVersionInfoCommand_finalize_options_TestCase, self).setUp()
 
-        self.test_instance = version.WriteVersionInfoCommand(self.test_distribution)
+        self.test_instance = version.WriteVersionInfoCommand(
+                self.test_distribution)
 
         patcher_func_egg_info_finalize_options = mock.patch.object(
                 setuptools.command.egg_info.egg_info, "finalize_options")
@@ -1206,7 +1209,8 @@ class WriteVersionInfoCommand_finalize_options_TestCase(
         self.test_instance.changelog_path = None
         self.test_instance.finalize_options()
         expected_changelog_path = self.fake_changelog_path
-        self.assertEqual(expected_changelog_path, self.test_instance.changelog_path)
+        self.assertEqual(
+                expected_changelog_path, self.test_instance.changelog_path)
 
     def test_leaves_changelog_path_if_already_set(self):
         """ Should leave ‘changelog_path’ attribute set. """
@@ -1214,7 +1218,8 @@ class WriteVersionInfoCommand_finalize_options_TestCase(
         self.test_instance.changelog_path = prior_changelog_path
         self.test_instance.finalize_options()
         expected_changelog_path = prior_changelog_path
-        self.assertEqual(expected_changelog_path, self.test_instance.changelog_path)
+        self.assertEqual(
+                expected_changelog_path, self.test_instance.changelog_path)
 
     def test_sets_outfile_path_to_default(self):
         """ Should set ‘outfile_path’ attribute to default value. """
@@ -1225,7 +1230,8 @@ class WriteVersionInfoCommand_finalize_options_TestCase(
             self.test_instance.finalize_options()
         expected_outfile_path = os.path.join(
                 self.fake_egg_dir, fake_version_info_filename)
-        self.assertEqual(expected_outfile_path, self.test_instance.outfile_path)
+        self.assertEqual(
+                expected_outfile_path, self.test_instance.outfile_path)
 
     def test_leaves_outfile_path_if_already_set(self):
         """ Should leave ‘outfile_path’ attribute set. """
@@ -1233,7 +1239,8 @@ class WriteVersionInfoCommand_finalize_options_TestCase(
         self.test_instance.outfile_path = prior_outfile_path
         self.test_instance.finalize_options()
         expected_outfile_path = prior_outfile_path
-        self.assertEqual(expected_outfile_path, self.test_instance.outfile_path)
+        self.assertEqual(
+                expected_outfile_path, self.test_instance.outfile_path)
 
 
 class has_changelog_TestCase(
