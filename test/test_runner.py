@@ -24,17 +24,15 @@ except ImportError:
 import os
 import os.path
 import sys
-import tempfile
 import errno
 import signal
 import functools
 
 import lockfile
 import mock
-import testtools
 
 from . import scaffold
-from .scaffold import (basestring, unicode)
+from .scaffold import unicode
 from .test_pidfile import (
         FakeFileDescriptorStringIO,
         setup_pidfile_fixtures,

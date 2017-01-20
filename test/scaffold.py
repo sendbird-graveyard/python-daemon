@@ -15,11 +15,8 @@
 
 from __future__ import (absolute_import, unicode_literals)
 
-import unittest
 import doctest
 import logging
-import os
-import sys
 import operator
 import textwrap
 from copy import deepcopy

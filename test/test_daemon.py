@@ -31,7 +31,7 @@ import functools
 import mock
 
 from . import scaffold
-from .scaffold import (basestring, unicode)
+from .scaffold import unicode
 from .test_pidfile import (
         FakeFileDescriptorStringIO,
         setup_pidfile_fixtures,
