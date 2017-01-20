@@ -15,12 +15,12 @@
 
 from __future__ import (absolute_import, unicode_literals)
 
+from copy import deepcopy
 import doctest
+import functools
 import logging
 import operator
 import textwrap
-from copy import deepcopy
-import functools
 
 try:
     # Python 2 has both ‘str’ (bytes) and ‘unicode’ (text).

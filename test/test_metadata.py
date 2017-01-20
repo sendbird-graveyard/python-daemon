@@ -15,7 +15,10 @@
 
 from __future__ import (absolute_import, unicode_literals)
 
+import collections
 import errno
+import functools
+import json
 import re
 try:
     # Python 3 standard library.
@@ -23,12 +26,9 @@ try:
 except ImportError:
     # Python 2 standard library.
     import urlparse
-import functools
-import collections
-import json
 
-import pkg_resources
 import mock
+import pkg_resources
 import testtools.helpers
 import testtools.matchers
 

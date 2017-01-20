@@ -21,15 +21,15 @@ try:
 except ImportError:
     # Python 2 standard library.
     import __builtin__ as builtins
-import os
-import itertools
-import tempfile
-import io
 import errno
 import functools
+import io
+import itertools
+import os
+import tempfile
 
-import mock
 import lockfile
+import mock
 
 from . import scaffold
 

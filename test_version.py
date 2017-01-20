@@ -14,30 +14,31 @@
 
 from __future__ import (absolute_import, unicode_literals)
 
-import os
-import os.path
-import io
-import errno
-import functools
 import collections
-import textwrap
-import json
-import tempfile
-import distutils.dist
 import distutils.cmd
+import distutils.dist
 import distutils.errors
 import distutils.fancy_getopt
+import errno
+import functools
+import io
+import json
+import os
+import os.path
+import tempfile
+import textwrap
 
-import mock
-import testtools
-import testscenarios
 import docutils
-import docutils.writers
 import docutils.nodes
+import docutils.writers
+import mock
 import setuptools
 import setuptools.command
+import testscenarios
+import testtools
 
 import version
+
 
 version.ensure_class_bases_begin_with(
         version.__dict__, str('VersionInfoWriter'), docutils.writers.Writer)

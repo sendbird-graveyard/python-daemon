@@ -15,18 +15,18 @@
 
 from __future__ import (absolute_import, unicode_literals)
 
-import os
-import sys
-import pwd
-import tempfile
-import resource
-import io
+import collections
 import errno
+import functools
+import io
+import os
+import pwd
+import resource
 import signal
 import socket
+import sys
+import tempfile
 from types import ModuleType
-import collections
-import functools
 
 import mock
 

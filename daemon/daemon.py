@@ -20,14 +20,14 @@
 
 from __future__ import (absolute_import, unicode_literals)
 
+import atexit
+import errno
 import os
-import sys
 import pwd
 import resource
-import errno
 import signal
 import socket
-import atexit
+import sys
 try:
     # Python 2 has both ‘str’ (bytes) and ‘unicode’ (text).
     basestring = basestring

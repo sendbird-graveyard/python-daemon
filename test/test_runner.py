@@ -21,31 +21,31 @@ try:
 except ImportError:
     # Python 2 standard library.
     import __builtin__ as builtins
+import errno
+import functools
 import os
 import os.path
-import sys
-import errno
 import signal
-import functools
+import sys
 
 import lockfile
 import mock
 
 from . import scaffold
 from .scaffold import unicode
-from .test_pidfile import (
-        FakeFileDescriptorStringIO,
-        setup_pidfile_fixtures,
-        make_pidlockfile_scenarios,
-        apply_lockfile_method_mocks,
-        )
 from .test_daemon import (
         setup_streams_fixtures,
         )
+from .test_pidfile import (
+        FakeFileDescriptorStringIO,
+        apply_lockfile_method_mocks,
+        make_pidlockfile_scenarios,
+        setup_pidfile_fixtures,
+        )
 
 import daemon.daemon
-import daemon.runner
 import daemon.pidfile
+import daemon.runner
 
 
 class ModuleExceptions_TestCase(scaffold.Exception_TestCase):

@@ -28,9 +28,13 @@ import warnings
 import lockfile
 
 from . import pidfile
-from .daemon import (basestring, unicode)
-from .daemon import DaemonContext
-from .daemon import _chain_exception_from_existing_exception_context
+from .daemon import (
+        _chain_exception_from_existing_exception_context,
+        DaemonContext,
+        basestring,
+        unicode,
+)
+
 
 try:
     # Python 3 standard library.

@@ -29,20 +29,22 @@
 
 from __future__ import (absolute_import, unicode_literals)
 
-import sys
-import os
+import collections
+import datetime
+import distutils
+import distutils.cmd
+import distutils.command.build
+import distutils.command.build_py
+import distutils.dist
+import distutils.errors
+import distutils.version
+import functools
 import io
 import json
-import datetime
-import textwrap
+import os
 import re
-import functools
-import collections
-import distutils
-import distutils.errors
-import distutils.cmd
-import distutils.dist
-import distutils.version
+import sys
+import textwrap
 
 import setuptools
 import setuptools.command.egg_info
