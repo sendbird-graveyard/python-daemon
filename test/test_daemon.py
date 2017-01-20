@@ -15,23 +15,23 @@
 
 from __future__ import (absolute_import, unicode_literals)
 
-import os
-import sys
-import pwd
-import tempfile
-import resource
-import io
+import collections
 import errno
+import functools
+import io
+import os
+import pwd
+import resource
 import signal
 import socket
+import sys
+import tempfile
 from types import ModuleType
-import collections
-import functools
 
 import mock
 
 from . import scaffold
-from .scaffold import (basestring, unicode)
+from .scaffold import unicode
 from .test_pidfile import (
         FakeFileDescriptorStringIO,
         setup_pidfile_fixtures,
@@ -44,21 +44,21 @@ class ModuleExceptions_TestCase(scaffold.Exception_TestCase):
     """ Test cases for module exception classes. """
 
     scenarios = scaffold.make_exception_scenarios([
-            ('daemon.daemon.DaemonError', dict(
-                exc_type = daemon.daemon.DaemonError,
-                min_args = 1,
-                types = [Exception],
-                )),
-            ('daemon.daemon.DaemonOSEnvironmentError', dict(
-                exc_type = daemon.daemon.DaemonOSEnvironmentError,
-                min_args = 1,
-                types = [daemon.daemon.DaemonError, OSError],
-                )),
-            ('daemon.daemon.DaemonProcessDetachError', dict(
-                exc_type = daemon.daemon.DaemonProcessDetachError,
-                min_args = 1,
-                types = [daemon.daemon.DaemonError, OSError],
-                )),
+            ('daemon.daemon.DaemonError', {
+                'exc_type': daemon.daemon.DaemonError,
+                'min_args': 1,
+                'types': [Exception],
+                }),
+            ('daemon.daemon.DaemonOSEnvironmentError', {
+                'exc_type': daemon.daemon.DaemonOSEnvironmentError,
+                'min_args': 1,
+                'types': [daemon.daemon.DaemonError, OSError],
+                }),
+            ('daemon.daemon.DaemonProcessDetachError', {
+                'exc_type': daemon.daemon.DaemonProcessDetachError,
+                'min_args': 1,
+                'types': [daemon.daemon.DaemonError, OSError],
+                }),
             ])
 
 
@@ -81,13 +81,13 @@ def setup_daemon_context_fixtures(testcase):
     testcase.mock_pidlockfile.path = testcase.fake_pidfile_path
 
     testcase.test_pwent = pwd.struct_passwd(sequence=[
-            testcase.getUniqueString(), # pw_name
-            testcase.getUniqueString(), # pw_passwd
-            testcase.getUniqueInteger(), # pw_uid
-            testcase.getUniqueInteger(), # pw_gid
-            testcase.getUniqueString(), # pw_gecos
-            testcase.getUniqueString(), # pw_dir
-            testcase.getUniqueString(), # pw_shell
+            testcase.getUniqueString(),  # pw_name
+            testcase.getUniqueString(),  # pw_passwd
+            testcase.getUniqueInteger(),  # pw_uid
+            testcase.getUniqueInteger(),  # pw_gid
+            testcase.getUniqueString(),  # pw_gecos
+            testcase.getUniqueString(),  # pw_dir
+            testcase.getUniqueString(),  # pw_shell
             ])
     def fake_getpwuid(uid):
         pwent = None
@@ -665,7 +665,9 @@ class DaemonContext_terminate_TestCase(DaemonContext_BaseTestCase):
 
 class DaemonContext_get_exclude_file_descriptors_TestCase(
         DaemonContext_BaseTestCase):
-    """ Test cases for DaemonContext._get_exclude_file_descriptors function. """
+    """
+    Test cases for DaemonContext._get_exclude_file_descriptors function.
+    """
 
     def setUp(self):
         """ Set up test fixtures. """

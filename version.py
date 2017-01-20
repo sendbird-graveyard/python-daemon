@@ -29,20 +29,22 @@
 
 from __future__ import (absolute_import, unicode_literals)
 
-import sys
-import os
+import collections
+import datetime
+import distutils
+import distutils.cmd
+import distutils.command.build
+import distutils.command.build_py
+import distutils.dist
+import distutils.errors
+import distutils.version
+import functools
 import io
 import json
-import datetime
-import textwrap
+import os
 import re
-import functools
-import collections
-import distutils
-import distutils.errors
-import distutils.cmd
-import distutils.dist
-import distutils.version
+import sys
+import textwrap
 
 import setuptools
 import setuptools.command.egg_info
@@ -346,7 +348,7 @@ class VersionInfoTranslator(object):
                 field_list_node.parent, self._docutils.nodes.section):
             # Field list is not in a section.
             raise self._docutils.nodes.SkipNode
-        if not self.current_field_name in self.attr_convert_funcs_by_attr_name:
+        if self.current_field_name not in self.attr_convert_funcs_by_attr_name:
             raise InvalidFormatError(
                     node,
                     "Unexpected field name {name!r}".format(
@@ -617,7 +619,8 @@ class WriteVersionInfoCommand(EggInfoCommand, object):
 
     def run(self):
         """ Execute this command. """
-        version_info = generate_version_info_from_changelog(self.changelog_path)
+        version_info = generate_version_info_from_changelog(
+                self.changelog_path)
         content = serialise_version_info_from_mapping(version_info)
         self.write_file("version info", self.outfile_path, content)
 

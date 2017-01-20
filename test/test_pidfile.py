@@ -21,15 +21,15 @@ try:
 except ImportError:
     # Python 2 standard library.
     import __builtin__ as builtins
-import os
-import itertools
-import tempfile
-import io
 import errno
 import functools
+import io
+import itertools
+import os
+import tempfile
 
-import mock
 import lockfile
+import mock
 
 from . import scaffold
 
@@ -273,8 +273,6 @@ def setup_pidfile_fixtures(testcase):
     testcase.addCleanup(func_patcher_os_open.stop)
 
     def fake_os_fdopen(fd, mode='rt', buffering=None):
-        scenario_pidfile = get_scenario_option(
-                testcase, 'pidfile', FakeFileDescriptorStringIO())
         if fd == testcase.scenario['pidfile'].fileno():
             result = testcase.scenario['pidfile']
         else:
@@ -389,7 +387,6 @@ class TimeoutPIDLockFile_TestCase(scaffold.TestCase):
 
         pidlockfile_scenarios = make_pidlockfile_scenarios()
         self.pidlockfile_scenario = pidlockfile_scenarios['simple']
-        pidfile_path = self.pidlockfile_scenario['pidfile_path']
 
         for func_name in ['__init__', 'acquire']:
             func_patcher = mock.patch.object(
@@ -452,7 +449,9 @@ class TimeoutPIDLockFile_TestCase(scaffold.TestCase):
             lockfile.pidlockfile.PIDLockFile, "acquire",
             autospec=True)
     def test_acquire_uses_stored_timeout_by_default(self, mock_func_acquire):
-        """ Should call superclass ‘acquire’ with stored timeout by default. """
+        """
+        Should call superclass ‘acquire’ with stored timeout by default.
+        """
         instance = self.test_instance
         test_timeout = self.test_kwargs['acquire_timeout']
         expected_timeout = test_timeout

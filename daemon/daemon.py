@@ -20,14 +20,14 @@
 
 from __future__ import (absolute_import, unicode_literals)
 
+import atexit
+import errno
 import os
-import sys
 import pwd
 import resource
-import errno
 import signal
 import socket
-import atexit
+import sys
 try:
     # Python 2 has both ‘str’ (bytes) and ‘unicode’ (text).
     basestring = basestring
@@ -659,7 +659,7 @@ def prevent_core_dump():
     try:
         # Ensure the resource limit exists on this platform, by requesting
         # its current value.
-        core_limit_prev = resource.getrlimit(core_resource)
+        resource.getrlimit(core_resource)
     except ValueError as exc:
         error = DaemonOSEnvironmentError(
                 "System does not support RLIMIT_CORE resource limit"
@@ -743,8 +743,7 @@ def is_socket(fd):
     file_socket = socket.fromfd(fd, socket.AF_INET, socket.SOCK_RAW)
 
     try:
-        socket_type = file_socket.getsockopt(
-                socket.SOL_SOCKET, socket.SO_TYPE)
+        file_socket.getsockopt(socket.SOL_SOCKET, socket.SO_TYPE)
     except socket.error as exc:
         exc_errno = exc.args[0]
         if exc_errno == errno.ENOTSOCK:

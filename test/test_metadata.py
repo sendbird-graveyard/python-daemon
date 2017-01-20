@@ -15,7 +15,10 @@
 
 from __future__ import (absolute_import, unicode_literals)
 
+import collections
 import errno
+import functools
+import json
 import re
 try:
     # Python 3 standard library.
@@ -23,12 +26,9 @@ try:
 except ImportError:
     # Python 2 standard library.
     import urlparse
-import functools
-import collections
-import json
 
-import pkg_resources
 import mock
+import pkg_resources
 import testtools.helpers
 import testtools.matchers
 
@@ -185,8 +185,8 @@ class metadata_content_TestCase(scaffold.TestCase):
         """ Copyright statement should be formatted correctly. """
         regex_pattern = (
                 "Copyright © "
-                "\d{4}" # four-digit year
-                "(?:–\d{4})?" # optional range dash and ending four-digit year
+                "\d{4}"  # Four-digit year.
+                "(?:–\d{4})?"  # Optional range dash and four-digit year.
                 )
         regex_flags = re.UNICODE
         self.assertThat(
@@ -196,8 +196,8 @@ class metadata_content_TestCase(scaffold.TestCase):
     def test_author_formatted_correctly(self):
         """ Author information should be formatted correctly. """
         regex_pattern = (
-                ".+ " # name
-                "<[^>]+>" # email address, in angle brackets
+                ".+ "  # Name.
+                "<[^>]+>"  # Email address, in angle brackets.
                 )
         regex_flags = re.UNICODE
         self.assertThat(
@@ -333,7 +333,7 @@ class get_distribution_version_info_TestCase(scaffold.TestCaseWithScenarios):
     def test_requests_installed_distribution(self):
         """ The package distribution should be retrieved. """
         expected_distribution_name = metadata.distribution_name
-        version_info = metadata.get_distribution_version_info(**self.test_args)
+        metadata.get_distribution_version_info(**self.test_args)
         pkg_resources.get_distribution.assert_called_with(
                 expected_distribution_name)
 
@@ -341,7 +341,7 @@ class get_distribution_version_info_TestCase(scaffold.TestCaseWithScenarios):
         """ The specified metadata resource name should be requested. """
         if hasattr(self, 'get_distribution_error'):
             self.skipTest("No access to distribution")
-        version_info = metadata.get_distribution_version_info(**self.test_args)
+        metadata.get_distribution_version_info(**self.test_args)
         self.mock_distribution.has_metadata.assert_called_with(
                 self.expected_resource_name)
 

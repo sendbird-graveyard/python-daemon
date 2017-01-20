@@ -15,15 +15,12 @@
 
 from __future__ import (absolute_import, unicode_literals)
 
-import unittest
+from copy import deepcopy
 import doctest
+import functools
 import logging
-import os
-import sys
 import operator
 import textwrap
-from copy import deepcopy
-import functools
 
 try:
     # Python 2 has both ‘str’ (bytes) and ‘unicode’ (text).
@@ -101,7 +98,7 @@ def format_function_signature(func):
         :param func: The function object to interrogate.
         :return: A formatted text representation of the function signature.
 
-        The signature is rendered a text; for example::
+        The signature is rendered as text; for example::
 
             foo(spam, eggs, ham=True, beans=None, *args, **kwargs)
 
@@ -246,8 +243,8 @@ class TestCase(testtools.testcase.TestCase):
                         Expected:
                             {first_text}
                         Got:
-                            {second_text}""")
-                        ).format(
+                            {second_text}
+                        """)).format(
                             first=first_signature,
                             first_text=first_signature_text,
                             second=second_signature,

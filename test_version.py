@@ -14,30 +14,31 @@
 
 from __future__ import (absolute_import, unicode_literals)
 
-import os
-import os.path
-import io
-import errno
-import functools
 import collections
-import textwrap
-import json
-import tempfile
-import distutils.dist
 import distutils.cmd
+import distutils.dist
 import distutils.errors
 import distutils.fancy_getopt
+import errno
+import functools
+import io
+import json
+import os
+import os.path
+import tempfile
+import textwrap
 
-import mock
-import testtools
-import testscenarios
 import docutils
-import docutils.writers
 import docutils.nodes
+import docutils.writers
+import mock
 import setuptools
 import setuptools.command
+import testscenarios
+import testtools
 
 import version
+
 
 version.ensure_class_bases_begin_with(
         version.__dict__, str('VersionInfoWriter'), docutils.writers.Writer)
@@ -77,6 +78,7 @@ def make_test_classes_for_ensure_class_bases_begin_with():
             if isinstance(value, type))
 
     return result
+
 
 class ensure_class_bases_begin_with_TestCase(
         testscenarios.WithScenarios, testtools.TestCase):
@@ -281,7 +283,9 @@ class parse_person_field_TestCase(
 
 class NoOpContextManager:
     """ A context manager with no effect. """
+
     def __enter__(self): pass
+
     def __exit__(self, exc_type, exc_value, traceback): pass
 
 
@@ -469,7 +473,9 @@ class ChangeLogEntry_as_version_info_entry_TestCase(
             ('default', {
                 'test_args': {},
                 'expected_result': collections.OrderedDict([
-                    ('release_date', version.ChangeLogEntry.default_release_date),
+                    (
+                        'release_date',
+                        version.ChangeLogEntry.default_release_date),
                     ('version', version.ChangeLogEntry.default_version),
                     ('maintainer', None),
                     ('body', None),
@@ -879,7 +885,7 @@ class generate_version_info_from_changelog_TestCase(
             self,
             mock_func_get_latest_version):
         """ Should open changelog file in text mode with expected encoding. """
-        result = version.generate_version_info_from_changelog(
+        version.generate_version_info_from_changelog(
                 self.fake_changelog_file_path)
         expected_file_path = self.fake_changelog_file_path
         expected_open_mode = 'rt'
@@ -961,7 +967,7 @@ class serialise_version_info_from_mapping_TestCase(
 
     def test_passes_specified_object(self, mock_func_json_dumps):
         """ Should pass the specified object to `json.dumps`. """
-        result = version.serialise_version_info_from_mapping(
+        version.serialise_version_info_from_mapping(
                 self.test_version_info)
         mock_func_json_dumps.assert_called_with(
                 self.test_version_info, indent=mock.ANY)
@@ -1141,7 +1147,7 @@ class WriteVersionInfoCommand_initialize_options_TestCase(
 
     def test_calls_base_class_method(self):
         """ Should call base class's ‘initialize_options’ method. """
-        instance = version.WriteVersionInfoCommand(self.test_distribution)
+        version.WriteVersionInfoCommand(self.test_distribution)
         base_command_class = setuptools.command.egg_info.egg_info
         base_command_class.initialize_options.assert_called_with()
 
@@ -1164,7 +1170,8 @@ class WriteVersionInfoCommand_finalize_options_TestCase(
         """ Set up test fixtures. """
         super(WriteVersionInfoCommand_finalize_options_TestCase, self).setUp()
 
-        self.test_instance = version.WriteVersionInfoCommand(self.test_distribution)
+        self.test_instance = version.WriteVersionInfoCommand(
+                self.test_distribution)
 
         patcher_func_egg_info_finalize_options = mock.patch.object(
                 setuptools.command.egg_info.egg_info, "finalize_options")
@@ -1202,7 +1209,8 @@ class WriteVersionInfoCommand_finalize_options_TestCase(
         self.test_instance.changelog_path = None
         self.test_instance.finalize_options()
         expected_changelog_path = self.fake_changelog_path
-        self.assertEqual(expected_changelog_path, self.test_instance.changelog_path)
+        self.assertEqual(
+                expected_changelog_path, self.test_instance.changelog_path)
 
     def test_leaves_changelog_path_if_already_set(self):
         """ Should leave ‘changelog_path’ attribute set. """
@@ -1210,7 +1218,8 @@ class WriteVersionInfoCommand_finalize_options_TestCase(
         self.test_instance.changelog_path = prior_changelog_path
         self.test_instance.finalize_options()
         expected_changelog_path = prior_changelog_path
-        self.assertEqual(expected_changelog_path, self.test_instance.changelog_path)
+        self.assertEqual(
+                expected_changelog_path, self.test_instance.changelog_path)
 
     def test_sets_outfile_path_to_default(self):
         """ Should set ‘outfile_path’ attribute to default value. """
@@ -1221,7 +1230,8 @@ class WriteVersionInfoCommand_finalize_options_TestCase(
             self.test_instance.finalize_options()
         expected_outfile_path = os.path.join(
                 self.fake_egg_dir, fake_version_info_filename)
-        self.assertEqual(expected_outfile_path, self.test_instance.outfile_path)
+        self.assertEqual(
+                expected_outfile_path, self.test_instance.outfile_path)
 
     def test_leaves_outfile_path_if_already_set(self):
         """ Should leave ‘outfile_path’ attribute set. """
@@ -1229,7 +1239,8 @@ class WriteVersionInfoCommand_finalize_options_TestCase(
         self.test_instance.outfile_path = prior_outfile_path
         self.test_instance.finalize_options()
         expected_outfile_path = prior_outfile_path
-        self.assertEqual(expected_outfile_path, self.test_instance.outfile_path)
+        self.assertEqual(
+                expected_outfile_path, self.test_instance.outfile_path)
 
 
 class has_changelog_TestCase(
@@ -1295,7 +1306,7 @@ class has_changelog_TestCase(
 
     def test_gets_changelog_path_from_distribution(self):
         """ Should call ‘get_changelog_path’ with distribution. """
-        result = version.has_changelog(self.test_command)
+        version.has_changelog(self.test_command)
         version.get_changelog_path.assert_called_with(
                 self.test_distribution)
 
@@ -1442,7 +1453,7 @@ class EggInfoCommand_run_TestCase(testtools.TestCase):
 
     def test_calls_base_class_run(self, mock_func_egg_info_run):
         """ Should call base class's ‘run’ method. """
-        result = self.test_instance.run()
+        self.test_instance.run()
         mock_func_egg_info_run.assert_called_with()
 
 
