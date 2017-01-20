@@ -44,21 +44,21 @@ class ModuleExceptions_TestCase(scaffold.Exception_TestCase):
     """ Test cases for module exception classes. """
 
     scenarios = scaffold.make_exception_scenarios([
-            ('daemon.daemon.DaemonError', dict(
-                exc_type = daemon.daemon.DaemonError,
-                min_args = 1,
-                types = [Exception],
-                )),
-            ('daemon.daemon.DaemonOSEnvironmentError', dict(
-                exc_type = daemon.daemon.DaemonOSEnvironmentError,
-                min_args = 1,
-                types = [daemon.daemon.DaemonError, OSError],
-                )),
-            ('daemon.daemon.DaemonProcessDetachError', dict(
-                exc_type = daemon.daemon.DaemonProcessDetachError,
-                min_args = 1,
-                types = [daemon.daemon.DaemonError, OSError],
-                )),
+            ('daemon.daemon.DaemonError', {
+                'exc_type': daemon.daemon.DaemonError,
+                'min_args': 1,
+                'types': [Exception],
+                }),
+            ('daemon.daemon.DaemonOSEnvironmentError', {
+                'exc_type': daemon.daemon.DaemonOSEnvironmentError,
+                'min_args': 1,
+                'types': [daemon.daemon.DaemonError, OSError],
+                }),
+            ('daemon.daemon.DaemonProcessDetachError', {
+                'exc_type': daemon.daemon.DaemonProcessDetachError,
+                'min_args': 1,
+                'types': [daemon.daemon.DaemonError, OSError],
+                }),
             ])
 
 

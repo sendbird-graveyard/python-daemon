@@ -52,26 +52,26 @@ class ModuleExceptions_TestCase(scaffold.Exception_TestCase):
     """ Test cases for module exception classes. """
 
     scenarios = scaffold.make_exception_scenarios([
-            ('daemon.runner.DaemonRunnerError', dict(
-                exc_type = daemon.runner.DaemonRunnerError,
-                min_args = 1,
-                types = [Exception],
-                )),
-            ('daemon.runner.DaemonRunnerInvalidActionError', dict(
-                exc_type = daemon.runner.DaemonRunnerInvalidActionError,
-                min_args = 1,
-                types = [daemon.runner.DaemonRunnerError, ValueError],
-                )),
-            ('daemon.runner.DaemonRunnerStartFailureError', dict(
-                exc_type = daemon.runner.DaemonRunnerStartFailureError,
-                min_args = 1,
-                types = [daemon.runner.DaemonRunnerError, RuntimeError],
-                )),
-            ('daemon.runner.DaemonRunnerStopFailureError', dict(
-                exc_type = daemon.runner.DaemonRunnerStopFailureError,
-                min_args = 1,
-                types = [daemon.runner.DaemonRunnerError, RuntimeError],
-                )),
+            ('daemon.runner.DaemonRunnerError', {
+                'exc_type': daemon.runner.DaemonRunnerError,
+                'min_args': 1,
+                'types': [Exception],
+                }),
+            ('daemon.runner.DaemonRunnerInvalidActionError', {
+                'exc_type': daemon.runner.DaemonRunnerInvalidActionError,
+                'min_args': 1,
+                'types': [daemon.runner.DaemonRunnerError, ValueError],
+                }),
+            ('daemon.runner.DaemonRunnerStartFailureError', {
+                'exc_type': daemon.runner.DaemonRunnerStartFailureError,
+                'min_args': 1,
+                'types': [daemon.runner.DaemonRunnerError, RuntimeError],
+                }),
+            ('daemon.runner.DaemonRunnerStopFailureError', {
+                'exc_type': daemon.runner.DaemonRunnerStopFailureError,
+                'min_args': 1,
+                'types': [daemon.runner.DaemonRunnerError, RuntimeError],
+                }),
             ])
 
 
