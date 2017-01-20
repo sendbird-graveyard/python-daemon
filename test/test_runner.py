@@ -312,7 +312,6 @@ class DaemonRunner_TestCase(DaemonRunner_BaseTestCase):
 
     def test_daemon_context_has_specified_stdin_stream(self):
         """ DaemonContext component should have specified stdin file. """
-        test_app = self.test_app
         expected_file = self.stream_files_by_name['stdin']
         daemon_context = self.test_instance.daemon_context
         self.assertEqual(expected_file, daemon_context.stdin)
@@ -325,7 +324,6 @@ class DaemonRunner_TestCase(DaemonRunner_BaseTestCase):
 
     def test_daemon_context_has_specified_stdout_stream(self):
         """ DaemonContext component should have specified stdout file. """
-        test_app = self.test_app
         expected_file = self.stream_files_by_name['stdout']
         daemon_context = self.test_instance.daemon_context
         self.assertEqual(expected_file, daemon_context.stdout)
@@ -338,7 +336,6 @@ class DaemonRunner_TestCase(DaemonRunner_BaseTestCase):
 
     def test_daemon_context_has_specified_stderr_stream(self):
         """ DaemonContext component should have specified stderr file. """
-        test_app = self.test_app
         expected_file = self.stream_files_by_name['stderr']
         daemon_context = self.test_instance.daemon_context
         self.assertEqual(expected_file, daemon_context.stderr)
@@ -400,7 +397,7 @@ class DaemonRunner_parse_args_TestCase(DaemonRunner_BaseTestCase):
         """ Should emit a usage message and exit if too few arguments. """
         instance = self.test_instance
         argv = [self.test_program_path]
-        exc = self.assertRaises(
+        self.assertRaises(
                 NotImplementedError,
                 instance.parse_args, argv)
         daemon.runner.DaemonRunner._usage_exit.assert_called_with(argv)
@@ -408,9 +405,8 @@ class DaemonRunner_parse_args_TestCase(DaemonRunner_BaseTestCase):
     def test_emits_usage_message_if_unknown_action_arg(self):
         """ Should emit a usage message and exit if unknown action. """
         instance = self.test_instance
-        progname = self.test_program_name
         argv = [self.test_program_path, 'bogus']
-        exc = self.assertRaises(
+        self.assertRaises(
                 NotImplementedError,
                 instance.parse_args, argv)
         daemon.runner.DaemonRunner._usage_exit.assert_called_with(argv)
@@ -480,7 +476,6 @@ class DaemonRunner_do_action_start_TestCase(DaemonRunner_BaseTestCase):
         instance = self.test_instance
         self.mock_runner_lockfile.read_pid.return_value = (
                 self.scenario['pidlockfile_scenario']['pidfile_pid'])
-        pidfile_path = self.scenario['pidfile_path']
         test_pid = self.scenario['pidlockfile_scenario']['pidfile_pid']
         expected_signal = signal.SIG_DFL
         test_error = ProcessLookupError("Not running")
@@ -548,9 +543,6 @@ class DaemonRunner_do_action_stop_TestCase(DaemonRunner_BaseTestCase):
     def test_breaks_lock_if_pidfile_stale(self):
         """ Should break lock if PID file is stale. """
         instance = self.test_instance
-        pidfile_path = self.scenario['pidfile_path']
-        test_pid = self.scenario['pidlockfile_scenario']['pidfile_pid']
-        expected_signal = signal.SIG_DFL
         test_error = OSError(errno.ESRCH, "Not running")
         os.kill.side_effect = test_error
         instance.do_action()
@@ -568,7 +560,6 @@ class DaemonRunner_do_action_stop_TestCase(DaemonRunner_BaseTestCase):
         """ Should raise error if cannot send signal to daemon process. """
         instance = self.test_instance
         test_pid = self.scenario['pidlockfile_scenario']['pidfile_pid']
-        pidfile_path = self.scenario['pidfile_path']
         test_error = OSError(errno.EPERM, "Nice try")
         os.kill.side_effect = test_error
         expected_error = daemon.runner.DaemonRunnerStopFailureError

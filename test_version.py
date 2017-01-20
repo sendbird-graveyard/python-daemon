@@ -883,7 +883,7 @@ class generate_version_info_from_changelog_TestCase(
             self,
             mock_func_get_latest_version):
         """ Should open changelog file in text mode with expected encoding. """
-        result = version.generate_version_info_from_changelog(
+        version.generate_version_info_from_changelog(
                 self.fake_changelog_file_path)
         expected_file_path = self.fake_changelog_file_path
         expected_open_mode = 'rt'
@@ -965,7 +965,7 @@ class serialise_version_info_from_mapping_TestCase(
 
     def test_passes_specified_object(self, mock_func_json_dumps):
         """ Should pass the specified object to `json.dumps`. """
-        result = version.serialise_version_info_from_mapping(
+        version.serialise_version_info_from_mapping(
                 self.test_version_info)
         mock_func_json_dumps.assert_called_with(
                 self.test_version_info, indent=mock.ANY)
@@ -1145,7 +1145,7 @@ class WriteVersionInfoCommand_initialize_options_TestCase(
 
     def test_calls_base_class_method(self):
         """ Should call base class's ‘initialize_options’ method. """
-        instance = version.WriteVersionInfoCommand(self.test_distribution)
+        version.WriteVersionInfoCommand(self.test_distribution)
         base_command_class = setuptools.command.egg_info.egg_info
         base_command_class.initialize_options.assert_called_with()
 
@@ -1299,7 +1299,7 @@ class has_changelog_TestCase(
 
     def test_gets_changelog_path_from_distribution(self):
         """ Should call ‘get_changelog_path’ with distribution. """
-        result = version.has_changelog(self.test_command)
+        version.has_changelog(self.test_command)
         version.get_changelog_path.assert_called_with(
                 self.test_distribution)
 
@@ -1446,7 +1446,7 @@ class EggInfoCommand_run_TestCase(testtools.TestCase):
 
     def test_calls_base_class_run(self, mock_func_egg_info_run):
         """ Should call base class's ‘run’ method. """
-        result = self.test_instance.run()
+        self.test_instance.run()
         mock_func_egg_info_run.assert_called_with()
 
 

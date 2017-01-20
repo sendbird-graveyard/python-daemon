@@ -273,8 +273,6 @@ def setup_pidfile_fixtures(testcase):
     testcase.addCleanup(func_patcher_os_open.stop)
 
     def fake_os_fdopen(fd, mode='rt', buffering=None):
-        scenario_pidfile = get_scenario_option(
-                testcase, 'pidfile', FakeFileDescriptorStringIO())
         if fd == testcase.scenario['pidfile'].fileno():
             result = testcase.scenario['pidfile']
         else:
@@ -389,7 +387,6 @@ class TimeoutPIDLockFile_TestCase(scaffold.TestCase):
 
         pidlockfile_scenarios = make_pidlockfile_scenarios()
         self.pidlockfile_scenario = pidlockfile_scenarios['simple']
-        pidfile_path = self.pidlockfile_scenario['pidfile_path']
 
         for func_name in ['__init__', 'acquire']:
             func_patcher = mock.patch.object(

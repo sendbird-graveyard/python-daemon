@@ -333,7 +333,7 @@ class get_distribution_version_info_TestCase(scaffold.TestCaseWithScenarios):
     def test_requests_installed_distribution(self):
         """ The package distribution should be retrieved. """
         expected_distribution_name = metadata.distribution_name
-        version_info = metadata.get_distribution_version_info(**self.test_args)
+        metadata.get_distribution_version_info(**self.test_args)
         pkg_resources.get_distribution.assert_called_with(
                 expected_distribution_name)
 
@@ -341,7 +341,7 @@ class get_distribution_version_info_TestCase(scaffold.TestCaseWithScenarios):
         """ The specified metadata resource name should be requested. """
         if hasattr(self, 'get_distribution_error'):
             self.skipTest("No access to distribution")
-        version_info = metadata.get_distribution_version_info(**self.test_args)
+        metadata.get_distribution_version_info(**self.test_args)
         self.mock_distribution.has_metadata.assert_called_with(
                 self.expected_resource_name)
 
