@@ -81,13 +81,13 @@ def setup_daemon_context_fixtures(testcase):
     testcase.mock_pidlockfile.path = testcase.fake_pidfile_path
 
     testcase.test_pwent = pwd.struct_passwd(sequence=[
-            testcase.getUniqueString(), # pw_name
-            testcase.getUniqueString(), # pw_passwd
-            testcase.getUniqueInteger(), # pw_uid
-            testcase.getUniqueInteger(), # pw_gid
-            testcase.getUniqueString(), # pw_gecos
-            testcase.getUniqueString(), # pw_dir
-            testcase.getUniqueString(), # pw_shell
+            testcase.getUniqueString(),  # pw_name
+            testcase.getUniqueString(),  # pw_passwd
+            testcase.getUniqueInteger(),  # pw_uid
+            testcase.getUniqueInteger(),  # pw_gid
+            testcase.getUniqueString(),  # pw_gecos
+            testcase.getUniqueString(),  # pw_dir
+            testcase.getUniqueString(),  # pw_shell
             ])
     def fake_getpwuid(uid):
         pwent = None
