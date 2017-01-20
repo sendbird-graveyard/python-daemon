@@ -348,7 +348,7 @@ class VersionInfoTranslator(object):
                 field_list_node.parent, self._docutils.nodes.section):
             # Field list is not in a section.
             raise self._docutils.nodes.SkipNode
-        if not self.current_field_name in self.attr_convert_funcs_by_attr_name:
+        if self.current_field_name not in self.attr_convert_funcs_by_attr_name:
             raise InvalidFormatError(
                     node,
                     "Unexpected field name {name!r}".format(
