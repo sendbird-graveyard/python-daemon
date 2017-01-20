@@ -98,7 +98,7 @@ def format_function_signature(func):
         :param func: The function object to interrogate.
         :return: A formatted text representation of the function signature.
 
-        The signature is rendered a text; for example::
+        The signature is rendered as text; for example::
 
             foo(spam, eggs, ham=True, beans=None, *args, **kwargs)
 
