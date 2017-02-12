@@ -85,7 +85,8 @@ class YearRange:
 def make_year_range(begin_year, end_date=None):
     """ Construct the year range given a start and possible end date.
 
-        :param begin_date: The beginning year (text) for the range.
+        :param begin_year: The beginning year (text, 4 digits) for the
+            range.
         :param end_date: The end date (text, ISO-8601 format) for the
             range, or a non-date token string.
         :return: The range of years as a `YearRange` instance.
