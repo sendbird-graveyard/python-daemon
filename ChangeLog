@@ -14,6 +14,13 @@ Version NEXT
 :Released: FUTURE
 :Maintainer: UNKNOWN <unknown@example.org>
 
+Bug Fixes:
+
+* Correct the description of the return value for
+  `daemon.is_detach_process_context_required`.
+
+  Closes: Pagure #6.
+
 
 Version 2.1.2
 =============

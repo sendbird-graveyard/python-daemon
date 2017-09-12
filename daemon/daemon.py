@@ -783,8 +783,8 @@ def is_process_started_by_superserver():
 def is_detach_process_context_required():
     """ Determine whether detaching the process context is required.
 
-        :return: ``True`` iff the process is already detached; otherwise
-            ``False``.
+        :return: ``False`` iff the process is already detached;
+            otherwise ``True``.
 
         The process environment is interrogated for the following:
 
