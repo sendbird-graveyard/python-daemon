@@ -1,7 +1,7 @@
 Credits for contributors to ‘python-daemon’
 ###########################################
 
-:Updated: 2015-11-26
+:Updated: 2017-10-12
 
 The ‘python-daemon’ library is the work of many contributors.
 
@@ -35,6 +35,13 @@ People who have also contributed substantial improvements:
 * Malcolm Purvis
 
 
+..
+    This document is written using `reStructuredText`_ markup, and can
+    be rendered with `Docutils`_ to other formats.
+
+    ..  _Docutils: http://docutils.sourceforge.net/
+    ..  _reStructuredText: http://docutils.sourceforge.net/rst.html
+
 ..
     This is free software: you may copy, modify, and/or distribute this work
     under the terms of the Apache License version 2.0 as published by the

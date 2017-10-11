@@ -3,13 +3,9 @@
 # setup.py
 # Part of ‘python-daemon’, an implementation of PEP 3143.
 #
-# Copyright © 2008–2017 Ben Finney <ben+python@benfinney.id.au>
-# Copyright © 2008 Robert Niederreiter, Jens Klein
-#
-# This is free software: you may copy, modify, and/or distribute this work
-# under the terms of the GNU General Public License as published by the
-# Free Software Foundation; version 3 of that license or any later version.
-# No warranty expressed or implied. See the file ‘LICENSE.GPL-3’ for details.
+# This is free software, and you are welcome to redistribute it under
+# certain conditions; see the end of this file for copyright
+# information, grant of license, and disclaimer of warranty.
 
 """ Distribution setup for ‘python-daemon’ library. """
 
@@ -86,6 +82,14 @@ setup(
             "Topic :: Software Development :: Libraries :: Python Modules",
             ],
         )
+
+
+# Copyright © 2008–2017 Ben Finney <ben+python@benfinney.id.au>
+#
+# This is free software: you may copy, modify, and/or distribute this work
+# under the terms of the GNU Affero General Public License as published by the
+# Free Software Foundation; version 3 of that license or any later version.
+# No warranty expressed or implied. See the file ‘LICENSE.GPL-3’ for details.
 
 
 # Local variables:
