@@ -890,8 +890,9 @@ def close_all_open_files(exclude=None):
         close.
         """
     if exclude is None:
-        exclude = set()
-    _close_each_open_file_descriptor(exclude=exclude)
+        _close_all_nonstandard_file_descriptors()
+    else:
+        _close_each_open_file_descriptor(exclude=exclude)
 
 
 def redirect_stream(system_stream, target_stream):

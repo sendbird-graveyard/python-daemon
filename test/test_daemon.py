@@ -1425,20 +1425,60 @@ class _close_all_nonstandard_file_descriptors_TestCase(scaffold.TestCase):
         mock_func_os_closerange.assert_called_with(*expected_args)
 
 
-@mock.patch.object(daemon.daemon, "_close_each_open_file_descriptor")
 class close_all_open_files_TestCase(scaffold.TestCase):
     """ Test cases for function `close_all_open_files`. """
 
-    def test_closes_each_open_file_descriptor(
-            self, mock_func_close_each_open_file_descriptor):
-        """ Should close each file descriptor that is open. """
+    def setUp(self):
+        """ Set up test fixtures. """
+        super(close_all_open_files_TestCase, self).setUp()
+
+        self.patch_close_helpers()
+
+    def patch_close_helpers(self):
+        """ Patch close helper functions for this test case. """
+        self.mock_close_helpers = mock.MagicMock()
+
+        for func_qualname in [
+                "daemon.daemon._close_each_open_file_descriptor",
+                "daemon.daemon._close_all_nonstandard_file_descriptors",
+                ]:
+            func_patcher = mock.patch(func_qualname)
+            mock_func = func_patcher.start()
+            self.addCleanup(func_patcher.stop)
+            self.mock_close_helpers.attach_mock(mock_func, func_qualname)
+
+    def test_closes_each_open_file_descriptor_when_exclude(self):
+        """ Should close each open file, when `exclude` specified. """
         test_exclude = set([3, 7])
         test_kwargs = dict(
                 exclude=test_exclude,
                 )
         daemon.daemon.close_all_open_files(**test_kwargs)
-        mock_func_close_each_open_file_descriptor.assert_called_with(
-                exclude=test_exclude)
+        self.mock_close_helpers.assert_has_calls([
+                mock.call.daemon.daemon._close_each_open_file_descriptor(
+                    exclude=test_exclude),
+                ])
+
+    def test_closes_all_file_descriptors_when_exclude_empty(self):
+        """ Should close all files, when `exclude` is empty. """
+        test_exclude = set()
+        test_kwargs = dict(
+                exclude=test_exclude,
+                )
+        daemon.daemon.close_all_open_files(**test_kwargs)
+        self.mock_close_helpers.assert_has_calls([
+                mock.call.daemon.daemon._close_each_open_file_descriptor(
+                    exclude=test_exclude),
+                ])
+
+    def test_closes_all_nonstandard_file_descriptors_when_no_exclude(self):
+        """ Should close all non-standard files, when no `exclude`. """
+        test_kwargs = dict()
+        daemon.daemon.close_all_open_files(**test_kwargs)
+        self.mock_close_helpers.assert_has_calls([
+                mock.call.daemon.daemon._close_all_nonstandard_file_descriptors(
+                    ),
+                ])
 
 
 class detach_process_context_TestCase(scaffold.TestCase):
