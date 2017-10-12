@@ -1366,43 +1366,62 @@ class get_maximum_file_descriptors_TestCase(scaffold.TestCase):
 def fake_get_maximum_file_descriptors():
     return fake_default_maxfd
 
+
 @mock.patch.object(resource, "RLIMIT_NOFILE", new=fake_RLIMIT_NOFILE)
 @mock.patch.object(resource, "RLIM_INFINITY", new=fake_RLIM_INFINITY)
 @mock.patch.object(
         resource, "getrlimit",
         new=fake_getrlimit_nofile_soft_infinity)
-@mock.patch.object(
-        daemon.daemon, "get_maximum_file_descriptors",
-        new=fake_get_maximum_file_descriptors)
 @mock.patch.object(daemon.daemon, "close_file_descriptor_if_open")
-class close_all_open_files_TestCase(scaffold.TestCase):
-    """ Test cases for close_all_open_files function. """
+class _close_each_open_file_descriptor_TestCase(
+        scaffold.TestCaseWithScenarios):
+    """ Test cases for function `_close_each_open_file_descriptor`. """
 
-    def test_requests_all_open_files_to_close(
+    fake_maxfd = 10
+
+    scenarios = [
+            ('exclude-empty', {
+                'test_kwargs': dict(
+                    exclude=set(),
+                    ),
+                'expected_file_descriptors': set(range(fake_maxfd)),
+                }),
+            ('exclude-two', {
+                'test_kwargs': dict(
+                    exclude={3, 7},
+                    ),
+                'expected_file_descriptors': {0, 1, 2, 4, 5, 6, 8, 9},
+                }),
+            ]
+
+    def test_requests_close_of_expected_file_descriptors(
             self, mock_func_close_file_descriptor_if_open):
-        """ Should request close of all open files. """
-        expected_file_descriptors = range(fake_default_maxfd)
+        """ Should request close of each expected file descriptor. """
+        with mock.patch.object(
+                daemon.daemon, "get_maximum_file_descriptors",
+                return_value=self.fake_maxfd):
+            daemon.daemon._close_each_open_file_descriptor(**self.test_kwargs)
         expected_calls = [
-                mock.call(fd) for fd in expected_file_descriptors]
-        daemon.daemon.close_all_open_files()
-        mock_func_close_file_descriptor_if_open.assert_has_calls(
-                expected_calls, any_order=True)
+                mock.call(fd) for fd in self.expected_file_descriptors]
+        self.assertEqual(
+                sorted(mock_func_close_file_descriptor_if_open.mock_calls),
+                sorted(expected_calls))
 
-    def test_requests_all_but_excluded_files_to_close(
-            self, mock_func_close_file_descriptor_if_open):
-        """ Should request close of all open files but those excluded. """
+
+@mock.patch.object(daemon.daemon, "_close_each_open_file_descriptor")
+class close_all_open_files_TestCase(scaffold.TestCase):
+    """ Test cases for function `close_all_open_files`. """
+
+    def test_closes_each_open_file_descriptor(
+            self, mock_func_close_each_open_file_descriptor):
+        """ Should close each file descriptor that is open. """
         test_exclude = set([3, 7])
-        args = dict(
+        test_kwargs = dict(
                 exclude=test_exclude,
                 )
-        expected_file_descriptors = set(
-                fd for fd in range(fake_default_maxfd)
-                if fd not in test_exclude)
-        expected_calls = [
-                mock.call(fd) for fd in expected_file_descriptors]
-        daemon.daemon.close_all_open_files(**args)
-        mock_func_close_file_descriptor_if_open.assert_has_calls(
-                expected_calls, any_order=True)
+        daemon.daemon.close_all_open_files(**test_kwargs)
+        mock_func_close_each_open_file_descriptor.assert_called_with(
+                exclude=test_exclude)
 
 
 class detach_process_context_TestCase(scaffold.TestCase):

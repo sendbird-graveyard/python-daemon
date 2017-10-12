@@ -848,6 +848,23 @@ def get_maximum_file_descriptors():
     return result
 
 
+def _close_each_open_file_descriptor(exclude):
+    """ Close each open file descriptor.
+
+        :param exclude: Collection of file descriptors to skip when closing
+            files.
+        :return: ``None``.
+
+        Closes every file descriptor (if open) of this process. If
+        specified, `exclude` is a set of file descriptors to *not*
+        close.
+        """
+    maxfd = get_maximum_file_descriptors()
+    for fd in reversed(range(maxfd)):
+        if fd not in exclude:
+            close_file_descriptor_if_open(fd)
+
+
 def close_all_open_files(exclude=None):
     """ Close all open file descriptors.
 
@@ -858,14 +875,10 @@ def close_all_open_files(exclude=None):
         Closes every file descriptor (if open) of this process. If
         specified, `exclude` is a set of file descriptors to *not*
         close.
-
         """
     if exclude is None:
         exclude = set()
-    maxfd = get_maximum_file_descriptors()
-    for fd in reversed(range(maxfd)):
-        if fd not in exclude:
-            close_file_descriptor_if_open(fd)
+    _close_each_open_file_descriptor(exclude=exclude)
 
 
 def redirect_stream(system_stream, target_stream):
