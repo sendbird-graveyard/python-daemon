@@ -865,6 +865,19 @@ def _close_each_open_file_descriptor(exclude):
             close_file_descriptor_if_open(fd)
 
 
+def _close_all_nonstandard_file_descriptors():
+    """ Close file descriptors of all non-standard files.
+
+        :return: ``None``.
+
+        Closes every file descriptor of non-standard files. Standard
+        files are `sys.stdin`, `sys.stdout`, `sys.stderr`.
+        """
+    fd_min = 3
+    fd_max = get_maximum_file_descriptors()
+    os.closerange(fd_min, fd_max)
+
+
 def close_all_open_files(exclude=None):
     """ Close all open file descriptors.
 

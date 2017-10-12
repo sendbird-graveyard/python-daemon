@@ -1408,6 +1408,23 @@ class _close_each_open_file_descriptor_TestCase(
                 sorted(expected_calls))
 
 
+@mock.patch.object(
+        daemon.daemon, "get_maximum_file_descriptors",
+        new=fake_get_maximum_file_descriptors)
+@mock.patch.object(os, "closerange")
+class _close_all_nonstandard_file_descriptors_TestCase(scaffold.TestCase):
+    """ Test cases for function `_close_all_nonstandard_file_descriptors`. """
+
+    def test_requests_all_open_files_to_close(
+            self, mock_func_os_closerange):
+        """ Should request close of all file descriptors in range. """
+        expected_fd_min = 3
+        expected_fd_max = daemon.daemon.get_maximum_file_descriptors()
+        expected_args = (expected_fd_min, expected_fd_max)
+        daemon.daemon._close_all_nonstandard_file_descriptors()
+        mock_func_os_closerange.assert_called_with(*expected_args)
+
+
 @mock.patch.object(daemon.daemon, "_close_each_open_file_descriptor")
 class close_all_open_files_TestCase(scaffold.TestCase):
     """ Test cases for function `close_all_open_files`. """
