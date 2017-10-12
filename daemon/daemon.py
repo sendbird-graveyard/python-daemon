@@ -458,20 +458,18 @@ class DaemonContext:
             items in `files_preserve`, and also each of `stdin`,
             `stdout`, and `stderr`. For each item:
 
-            * If the item is ``None``, it is omitted from the return
-              set.
+            * If the item is ``None``, omit it from the return set.
 
-            * If the item's ``fileno()`` method returns a value, that
-              value is in the return set.
+            * If the item's `fileno` method returns a value, include
+              that value in the return set.
 
-            * Otherwise, the item is in the return set verbatim.
-
+            * Otherwise, include the item verbatim in the return set.
             """
         files_preserve = self.files_preserve
         if files_preserve is None:
             files_preserve = []
         files_preserve.extend(
-                item for item in [self.stdin, self.stdout, self.stderr]
+                item for item in {self.stdin, self.stdout, self.stderr}
                 if hasattr(item, 'fileno'))
 
         exclude_descriptors = set()
