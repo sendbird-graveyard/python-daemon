@@ -524,6 +524,37 @@ class DaemonContext:
         return signal_handler_map
 
 
+def get_stream_file_descriptors(
+        stdin=sys.stdin,
+        stdout=sys.stdout,
+        stderr=sys.stderr,
+        ):
+    """ Get the set of file descriptors for the process streams.
+
+        :stdin: The input stream for the process (default:
+            `sys.stdin`).
+        :stdout: The ouput stream for the process (default:
+            `sys.stdout`).
+        :stderr: The diagnostic stream for the process (default:
+            `sys.stderr`).
+        :return: A `set` of each file descriptor (integer) for the
+            streams.
+
+        The standard streams are the files `sys.stdin`, `sys.stdout`,
+        `sys.stderr`.
+
+        Streams might in some circumstances be non-file objects.
+        Include in the result only those streams that actually have a
+        file descriptor (as returned by the `fileno` method).
+        """
+    file_descriptors = set(
+            fd for fd in set(
+                _get_file_descriptor(stream)
+                for stream in {stdin, stdout, stderr})
+            if fd is not None)
+    return file_descriptors
+
+
 def _get_file_descriptor(obj):
     """ Get the file descriptor, if the object has one.
 
@@ -534,7 +565,6 @@ def _get_file_descriptor(obj):
         The object may be a non-file object. It may also be a
         file-like object with no support for a file descriptor. In
         either case, return ``None``.
-
         """
     file_descriptor = None
     if hasattr(obj, 'fileno'):
