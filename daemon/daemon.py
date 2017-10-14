@@ -908,10 +908,9 @@ def _close_each_open_file_descriptor(exclude):
         specified, `exclude` is a set of file descriptors to *not*
         close.
         """
-    maxfd = get_maximum_file_descriptors()
-    for fd in reversed(range(maxfd)):
-        if fd not in exclude:
-            close_file_descriptor_if_open(fd)
+    candidate_fds = _get_candidate_file_descriptors(exclude)
+    for fd in reversed(sorted(list(candidate_fds))):
+        close_file_descriptor_if_open(fd)
 
 
 def _close_all_nonstandard_file_descriptors():
