@@ -1571,6 +1571,45 @@ class _close_all_nonstandard_file_descriptors_TestCase(scaffold.TestCase):
         mock_func_os_closerange.assert_called_with(*expected_args)
 
 
+@mock.patch.object(os, "closerange")
+class _close_file_descriptor_ranges_TestCase(scaffold.TestCaseWithScenarios):
+    """ Test cases for function `_close_file_descriptor_ranges`. """
+
+    scenarios = [
+            ('ranges-one', {
+                'test_kwargs': {
+                    'ranges': [
+                        daemon.daemon.FileDescriptorRange(0, 10),
+                        ],
+                    },
+                'expected_os_closerange_calls': [
+                    mock.call(0, 10),
+                    ],
+                }),
+            ('ranges-three', {
+                'test_kwargs': {
+                    'ranges': [
+                        daemon.daemon.FileDescriptorRange(5, 10),
+                        daemon.daemon.FileDescriptorRange(0, 3),
+                        daemon.daemon.FileDescriptorRange(15, 20),
+                        ],
+                    },
+                'expected_os_closerange_calls': [
+                    mock.call(5, 10),
+                    mock.call(0, 3),
+                    mock.call(15, 20),
+                    ],
+                }),
+            ]
+
+    def test_calls_os_closerange_with_expected_ranges(
+            self, mock_func_os_closerange):
+        """ Should request close of all file descriptors in range. """
+        daemon.daemon._close_file_descriptor_ranges(**self.test_kwargs)
+        mock_func_os_closerange.assert_has_calls(
+                self.expected_os_closerange_calls)
+
+
 class close_all_open_files_TestCase(scaffold.TestCase):
     """ Test cases for function `close_all_open_files`. """
 

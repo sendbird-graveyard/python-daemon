@@ -966,6 +966,20 @@ def _close_all_nonstandard_file_descriptors():
     os.closerange(fd_min, fd_max)
 
 
+def _close_file_descriptor_ranges(ranges):
+    """ Close file descriptors described by `ranges`.
+
+        :param ranges: A sequence of `FileDescriptorRange` instances,
+            each describing a range of file descriptors to close.
+        :return: ``None``.
+
+        Attempt to close each open file descriptor – starting from
+        `low` and ending before `high` – from each range in `ranges`.
+        """
+    for range in ranges:
+        os.closerange(range.low, range.high)
+
+
 def close_all_open_files(exclude=None):
     """ Close all open file descriptors.
 
