@@ -937,34 +937,6 @@ def _get_candidate_file_descriptor_ranges(exclude):
     return ranges
 
 
-def _close_each_open_file_descriptor(exclude):
-    """ Close each open file descriptor.
-
-        :param exclude: Collection of file descriptors to skip when closing
-            files.
-        :return: ``None``.
-
-        Closes every file descriptor (if open) of this process. If
-        specified, `exclude` is a set of file descriptors to *not*
-        close.
-        """
-    candidate_fd_ranges = _get_candidate_file_descriptor_ranges(exclude)
-    _close_file_descriptor_ranges(candidate_fd_ranges)
-
-
-def _close_all_nonstandard_file_descriptors():
-    """ Close file descriptors of all non-standard files.
-
-        :return: ``None``.
-
-        Closes every file descriptor of non-standard files. Standard
-        files are `sys.stdin`, `sys.stdout`, `sys.stderr`.
-        """
-    exclude = get_stream_file_descriptors()
-    candidate_fd_ranges = _get_candidate_file_descriptor_ranges(exclude)
-    _close_file_descriptor_ranges(candidate_fd_ranges)
-
-
 def _close_file_descriptor_ranges(ranges):
     """ Close file descriptors described by `ranges`.
 
