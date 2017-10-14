@@ -876,6 +876,27 @@ def get_maximum_file_descriptors():
     return result
 
 
+def _get_candidate_file_descriptors(exclude):
+    """ Get the collection of candidate file descriptors.
+
+        :param exclude: A collection of file descriptors that should
+            be excluded from the return set.
+        :return: The collection (a `set`) of file descriptors that are
+            candidates for files that may be open in this process.
+
+        Determine the set of all `int` values that could be open file
+        descriptors in this process. A file descriptor is a candidate
+        if it is within the range (0, `maxfd`), excluding those
+        integers in the `exclude` collection.
+
+        The `maxfd` value is determined from the standard library
+        `resource` module.
+        """
+    maxfd = get_maximum_file_descriptors()
+    candidates = set(range(0, maxfd)).difference(exclude)
+    return candidates
+
+
 def _close_each_open_file_descriptor(exclude):
     """ Close each open file descriptor.
 

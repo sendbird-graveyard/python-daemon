@@ -1431,6 +1431,43 @@ def fake_get_maximum_file_descriptors():
     return fake_default_maxfd
 
 
+class _get_candidate_file_descriptors_TestCase(scaffold.TestCaseWithScenarios):
+    """ Test cases for function `_get_candidate_file_descriptors`. """
+
+    scenarios = [
+            ('exclude-three', {
+                'fake_maxfd': 10,
+                'test_kwargs': {
+                    'exclude': {3, 5, 8},
+                    },
+                'expected_result': {0, 1, 2, 4, 6, 7, 9},
+                }),
+            ('exclude-one', {
+                'fake_maxfd': 5,
+                'test_kwargs': {
+                    'exclude': {4},
+                    },
+                'expected_result': {0, 1, 2, 3},
+                }),
+            ('exclude-none', {
+                'fake_maxfd': 5,
+                'test_kwargs': {
+                    'exclude': set(),
+                },
+                'expected_result': {0, 1, 2, 3, 4},
+                }),
+            ]
+
+    def test_returns_expected_file_descriptors(self):
+        """ Should return the expected set of file descriptors. """
+        with mock.patch.object(
+                daemon.daemon, "get_maximum_file_descriptors",
+                return_value=self.fake_maxfd):
+            result = daemon.daemon._get_candidate_file_descriptors(
+                    **self.test_kwargs)
+        self.assertEqual(result, self.expected_result)
+
+
 @mock.patch.object(resource, "RLIMIT_NOFILE", new=fake_RLIMIT_NOFILE)
 @mock.patch.object(resource, "RLIM_INFINITY", new=fake_RLIM_INFINITY)
 @mock.patch.object(
