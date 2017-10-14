@@ -21,6 +21,7 @@
 from __future__ import (absolute_import, unicode_literals)
 
 import atexit
+import collections
 import errno
 import os
 import pwd
@@ -895,6 +896,45 @@ def _get_candidate_file_descriptors(exclude):
     maxfd = get_maximum_file_descriptors()
     candidates = set(range(0, maxfd)).difference(exclude)
     return candidates
+
+
+FileDescriptorRange = collections.namedtuple(
+        'FileDescriptorRange', ['low', 'high'])
+
+
+def _get_candidate_file_descriptor_ranges(exclude):
+    """ Get the collection of candidate file descriptor ranges.
+
+        :param exclude: A collection of file descriptors that should
+            be excluded from the return ranges.
+        :return: The collection (a `set`) of ranges that contain the
+            file descriptors that are candidates for files that may be
+            open in this process.
+
+        Determine the ranges – pairs (`low`, `high`) – of `int` values
+        that are candidate file descriptors.
+
+        A value is a candidate if it could be an open file descriptors
+        in this process, excluding those integers in the `exclude`
+        collection.
+        """
+    candidates_list = sorted(_get_candidate_file_descriptors(exclude))
+    ranges = []
+    this_range = FileDescriptorRange(
+            low=min(candidates_list),
+            high=(min(candidates_list) + 1))
+    for fd in candidates_list[1:]:
+        high = fd + 1
+        if this_range.high == fd:
+            # This file descriptor extends the current range.
+            this_range = this_range._replace(high=high)
+        else:
+            # The previous range has ended at a gap.
+            ranges.append(this_range)
+            # This file descriptor begins a new range.
+            this_range = FileDescriptorRange(low=fd, high=high)
+    ranges.append(this_range)
+    return ranges
 
 
 def _close_each_open_file_descriptor(exclude):
