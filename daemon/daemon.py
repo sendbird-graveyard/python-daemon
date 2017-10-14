@@ -991,9 +991,9 @@ def close_all_open_files(exclude=None):
         close.
         """
     if exclude is None:
-        _close_all_nonstandard_file_descriptors()
-    else:
-        _close_each_open_file_descriptor(exclude=exclude)
+        exclude = set()
+    fd_ranges = _get_candidate_file_descriptor_ranges(exclude=exclude)
+    _close_file_descriptor_ranges(ranges=fd_ranges)
 
 
 def redirect_stream(system_stream, target_stream):

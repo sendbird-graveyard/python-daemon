@@ -1620,24 +1620,28 @@ class _close_file_descriptor_ranges_TestCase(scaffold.TestCaseWithScenarios):
 class close_all_open_files_TestCase(scaffold.TestCase):
     """ Test cases for function `close_all_open_files`. """
 
+    fake_maxfd = 10
+
     def setUp(self):
         """ Set up test fixtures. """
         super(close_all_open_files_TestCase, self).setUp()
 
-        self.patch_close_helpers()
+        self.patch_get_maximum_file_descriptors(self.fake_maxfd)
+        self.patch_os_closerange()
 
-    def patch_close_helpers(self):
-        """ Patch close helper functions for this test case. """
-        self.mock_close_helpers = mock.MagicMock()
+    def patch_get_maximum_file_descriptors(self, fake_maxfd):
+        """ Patch `get_maximum_file_descriptors` for this test case. """
+        func_patcher = mock.patch.object(
+            daemon.daemon, "get_maximum_file_descriptors",
+            return_value=fake_maxfd)
+        self.mock_func_get_maximum_file_descriptors = func_patcher.start()
+        self.addCleanup(func_patcher.stop)
 
-        for func_qualname in [
-                "daemon.daemon._close_each_open_file_descriptor",
-                "daemon.daemon._close_all_nonstandard_file_descriptors",
-                ]:
-            func_patcher = mock.patch(func_qualname)
-            mock_func = func_patcher.start()
-            self.addCleanup(func_patcher.stop)
-            self.mock_close_helpers.attach_mock(mock_func, func_qualname)
+    def patch_os_closerange(self):
+        """ Patch `os.closerange` function for this test case. """
+        func_patcher = mock.patch.object(os, "closerange")
+        self.mock_func_os_closerange = func_patcher.start()
+        self.addCleanup(func_patcher.stop)
 
     def test_closes_each_open_file_descriptor_when_exclude(self):
         """ Should close each open file, when `exclude` specified. """
@@ -1646,10 +1650,13 @@ class close_all_open_files_TestCase(scaffold.TestCase):
                 exclude=test_exclude,
                 )
         daemon.daemon.close_all_open_files(**test_kwargs)
-        self.mock_close_helpers.assert_has_calls([
-                mock.call.daemon.daemon._close_each_open_file_descriptor(
-                    exclude=test_exclude),
-                ])
+        expected_os_closerange_calls = [
+                mock.call(0, 3),
+                mock.call(4, 7),
+                mock.call(8, self.fake_maxfd),
+                ]
+        self.mock_func_os_closerange.assert_has_calls(
+                expected_os_closerange_calls, any_order=True)
 
     def test_closes_all_file_descriptors_when_exclude_empty(self):
         """ Should close all files, when `exclude` is empty. """
@@ -1658,19 +1665,21 @@ class close_all_open_files_TestCase(scaffold.TestCase):
                 exclude=test_exclude,
                 )
         daemon.daemon.close_all_open_files(**test_kwargs)
-        self.mock_close_helpers.assert_has_calls([
-                mock.call.daemon.daemon._close_each_open_file_descriptor(
-                    exclude=test_exclude),
-                ])
+        expected_os_closerange_calls = [
+                mock.call(0, self.fake_maxfd),
+                ]
+        self.mock_func_os_closerange.assert_has_calls(
+                expected_os_closerange_calls, any_order=True)
 
-    def test_closes_all_nonstandard_file_descriptors_when_no_exclude(self):
-        """ Should close all non-standard files, when no `exclude`. """
+    def test_closes_all_file_descriptors_when_no_exclude(self):
+        """ Should close all files, when no `exclude`. """
         test_kwargs = dict()
         daemon.daemon.close_all_open_files(**test_kwargs)
-        self.mock_close_helpers.assert_has_calls([
-                mock.call.daemon.daemon._close_all_nonstandard_file_descriptors(
-                    ),
-                ])
+        expected_os_closerange_calls = [
+                mock.call(0, self.fake_maxfd),
+                ]
+        self.mock_func_os_closerange.assert_has_calls(
+                expected_os_closerange_calls, any_order=True)
 
 
 class detach_process_context_TestCase(scaffold.TestCase):
