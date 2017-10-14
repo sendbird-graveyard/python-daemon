@@ -1518,7 +1518,7 @@ class _get_candidate_file_descriptor_ranges_TestCase(
 @mock.patch.object(
         resource, "getrlimit",
         new=fake_getrlimit_nofile_soft_infinity)
-@mock.patch.object(daemon.daemon, "close_file_descriptor_if_open")
+@mock.patch.object(os, "closerange")
 class _close_each_open_file_descriptor_TestCase(
         scaffold.TestCaseWithScenarios):
     """ Test cases for function `_close_each_open_file_descriptor`. """
@@ -1530,27 +1530,34 @@ class _close_each_open_file_descriptor_TestCase(
                 'test_kwargs': dict(
                     exclude=set(),
                     ),
-                'expected_file_descriptors': set(range(fake_maxfd)),
+                'expected_file_descriptor_ranges': [
+                    daemon.daemon.FileDescriptorRange(0, fake_maxfd),
+                    ],
                 }),
             ('exclude-two', {
                 'test_kwargs': dict(
                     exclude={3, 7},
                     ),
-                'expected_file_descriptors': {0, 1, 2, 4, 5, 6, 8, 9},
+                'expected_file_descriptor_ranges': [
+                    daemon.daemon.FileDescriptorRange(0, 3),
+                    daemon.daemon.FileDescriptorRange(4, 7),
+                    daemon.daemon.FileDescriptorRange(8, fake_maxfd),
+                    ],
                 }),
             ]
 
     def test_requests_close_of_expected_file_descriptors(
-            self, mock_func_close_file_descriptor_if_open):
+            self, mock_func_os_closerange):
         """ Should request close of each expected file descriptor. """
         with mock.patch.object(
                 daemon.daemon, "get_maximum_file_descriptors",
                 return_value=self.fake_maxfd):
             daemon.daemon._close_each_open_file_descriptor(**self.test_kwargs)
         expected_calls = [
-                mock.call(fd) for fd in self.expected_file_descriptors]
+                mock.call(range.low, range.high)
+                for range in self.expected_file_descriptor_ranges]
         self.assertEqual(
-                sorted(mock_func_close_file_descriptor_if_open.mock_calls),
+                sorted(mock_func_os_closerange.mock_calls),
                 sorted(expected_calls))
 
 

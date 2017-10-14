@@ -948,9 +948,8 @@ def _close_each_open_file_descriptor(exclude):
         specified, `exclude` is a set of file descriptors to *not*
         close.
         """
-    candidate_fds = _get_candidate_file_descriptors(exclude)
-    for fd in reversed(sorted(list(candidate_fds))):
-        close_file_descriptor_if_open(fd)
+    candidate_fd_ranges = _get_candidate_file_descriptor_ranges(exclude)
+    _close_file_descriptor_ranges(candidate_fd_ranges)
 
 
 def _close_all_nonstandard_file_descriptors():
@@ -961,9 +960,9 @@ def _close_all_nonstandard_file_descriptors():
         Closes every file descriptor of non-standard files. Standard
         files are `sys.stdin`, `sys.stdout`, `sys.stderr`.
         """
-    fd_min = 3
-    fd_max = get_maximum_file_descriptors()
-    os.closerange(fd_min, fd_max)
+    exclude = get_stream_file_descriptors()
+    candidate_fd_ranges = _get_candidate_file_descriptor_ranges(exclude)
+    _close_file_descriptor_ranges(candidate_fd_ranges)
 
 
 def _close_file_descriptor_ranges(ranges):
