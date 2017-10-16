@@ -11,8 +11,10 @@
 
 from __future__ import (absolute_import, unicode_literals)
 
+import os.path
 import pydoc
 import sys
+import unittest
 
 from setuptools import (setup, find_packages)
 
@@ -35,6 +37,13 @@ metadata = main_module._metadata
 (synopsis, long_description) = pydoc.splitdoc(pydoc.getdoc(main_module))
 
 
+def test_suite():
+    """ Make the test suite for this code base. """
+    loader = unittest.TestLoader()
+    suite = loader.discover(os.path.curdir, pattern='test_*.py')
+    return suite
+
+
 setup_kwargs = dict(
         distclass=version.ChangelogAwareDistribution,
         name=metadata.distribution_name,
@@ -49,7 +58,7 @@ setup_kwargs = dict(
         setup_requires=[
             "docutils",
             ],
-        test_suite="unittest2.collector",
+        test_suite="setup.test_suite",
         tests_require=[
             "unittest2 >=0.5.1",
             "testtools",
