@@ -35,7 +35,7 @@ metadata = main_module._metadata
 (synopsis, long_description) = pydoc.splitdoc(pydoc.getdoc(main_module))
 
 
-setup(
+setup_kwargs = dict(
         distclass=version.ChangelogAwareDistribution,
         name=metadata.distribution_name,
         packages=find_packages(exclude=["test"]),
@@ -82,6 +82,10 @@ setup(
             "Topic :: Software Development :: Libraries :: Python Modules",
             ],
         )
+
+
+if __name__ == '__main__':
+    setup(**setup_kwargs)
 
 
 # Copyright © 2008–2017 Ben Finney <ben+python@benfinney.id.au>
