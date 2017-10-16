@@ -4,7 +4,7 @@
 
 # Editor artifacts.
 *~
-\#.*#
+\#.*\#
 
 # Development artifacts.
 TAGS
@@ -12,15 +12,15 @@ TAGS
 # Build artifacts.
 __pycache__/
 *.py[cod]
-build/
-dist/
-.eggs/
-*.egg-info
+/build/
+/dist/
+/.eggs/
+/*.egg-info
 
 # Test artifacts.
-.coverage
-htmlcov/
-.tox/
+/.coverage
+/htmlcov/
+/.tox/
 
 
 # Local variables:
