@@ -80,7 +80,7 @@ setup_kwargs = dict(
         url=metadata.url,
         long_description=long_description,
         classifiers=[
-            # Reference: http://pypi.python.org/pypi?%3Aaction=list_classifiers
+            # Reference: https://pypi.python.org/pypi?%3Aaction=list_classifiers
             "Development Status :: 5 - Production/Stable",
             "License :: OSI Approved :: Apache Software License",
             "Operating System :: POSIX",
