@@ -68,7 +68,6 @@ setup_kwargs = dict(
             ],
         install_requires=[
             "setuptools",
-            "docutils",
             "lockfile >=0.10",
             ],
 
@@ -91,6 +90,11 @@ setup_kwargs = dict(
             "Topic :: Software Development :: Libraries :: Python Modules",
             ],
         )
+
+# Docutils is only required for building, but Setuptools can't distinguish
+# dependencies properly.
+# See <URL:https://github.com/pypa/setuptools/issues/457>.
+setup_args['install_requires'].append("docutils")
 
 
 if __name__ == '__main__':
