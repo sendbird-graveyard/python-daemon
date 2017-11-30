@@ -21,6 +21,7 @@ import functools
 import io
 import os
 import pwd
+import random
 import resource
 import signal
 import socket
@@ -1230,6 +1231,69 @@ class prevent_core_dump_TestCase(scaffold.TestCase):
         self.assertEqual(test_error, exc.__cause__)
 
 
+class get_stream_file_descriptors_TestCase(scaffold.TestCase):
+    """ Test cases for function `get_stream_file_descriptors`. """
+
+    fake_maxfd = 1000
+
+    def setUp(self):
+        """ Set up fixtures for this test case. """
+        super(get_stream_file_descriptors_TestCase, self).setUp()
+
+        self.patch_get_maximum_file_descriptors()
+        self.patch_standard_streams_fileno()
+
+    def patch_get_maximum_file_descriptors(self):
+        """ Patch the function `get_maximum_file_descriptors`. """
+        func_patcher = mock.patch.object(
+                daemon.daemon, "get_maximum_file_descriptors",
+                return_value=self.fake_maxfd)
+        self.mock_get_maximum_file_descriptors = func_patcher.start()
+        self.addCleanup(func_patcher.stop)
+
+    def patch_standard_streams_fileno(self):
+        """ Patch the method `fileno` of standard streams. """
+        available_fileno_results = list(range(0, (self.fake_maxfd + 1)))
+        random.shuffle(available_fileno_results)
+        for stream_name in ["stdin", "stdout", "stderr"]:
+            fake_fileno = available_fileno_results.pop()
+            stream = getattr(sys, stream_name)
+            func_patcher = mock.patch.object(
+                    stream, "fileno",
+                    return_value=fake_fileno)
+            func_patcher.start()
+            self.addCleanup(func_patcher.stop)
+
+    def test_returns_standard_stream_file_descriptors(self):
+        """ Should return the file descriptors of all standard streams. """
+        result = daemon.daemon.get_stream_file_descriptors()
+        expected_fds = set(
+            stream.fileno() for stream in {sys.stdin, sys.stdout, sys.stderr})
+        self.assertEqual(result, expected_fds)
+
+    def test_returns_specified_stream_file_descriptors(self):
+        """ Should return the file descriptors of specified streams. """
+        fake_streams = dict(
+                stdin=FakeFileDescriptorStringIO(),
+                stdout=FakeFileDescriptorStringIO(),
+                stderr=FakeFileDescriptorStringIO(),
+                )
+        test_kwargs = dict(**fake_streams)
+        result = daemon.daemon.get_stream_file_descriptors(
+                **test_kwargs)
+        expected_fds = set(
+            stream.fileno() for stream in fake_streams.values())
+        self.assertEqual(result, expected_fds)
+
+    def test_omits_stream_if_stream_has_no_fileno(self):
+        """ Should omit a stream that has no `fileno` method. """
+        with mock.patch.object(sys.stdin, "fileno", return_value=None):
+            result = daemon.daemon.get_stream_file_descriptors()
+        expected_fds = set(
+            stream.fileno() for stream in [sys.stdout, sys.stderr])
+        self.assertEqual(result, expected_fds)
+
+
 @mock.patch.object(os, "close")
 class close_file_descriptor_if_open_TestCase(scaffold.TestCase):
     """ Test cases for close_file_descriptor_if_open function. """
@@ -1366,43 +1430,191 @@ class get_maximum_file_descriptors_TestCase(scaffold.TestCase):
 def fake_get_maximum_file_descriptors():
     return fake_default_maxfd
 
-@mock.patch.object(resource, "RLIMIT_NOFILE", new=fake_RLIMIT_NOFILE)
-@mock.patch.object(resource, "RLIM_INFINITY", new=fake_RLIM_INFINITY)
-@mock.patch.object(
-        resource, "getrlimit",
-        new=fake_getrlimit_nofile_soft_infinity)
-@mock.patch.object(
-        daemon.daemon, "get_maximum_file_descriptors",
-        new=fake_get_maximum_file_descriptors)
-@mock.patch.object(daemon.daemon, "close_file_descriptor_if_open")
+
+class _get_candidate_file_descriptors_TestCase(scaffold.TestCaseWithScenarios):
+    """ Test cases for function `_get_candidate_file_descriptors`. """
+
+    scenarios = [
+            ('exclude-three', {
+                'fake_maxfd': 10,
+                'test_kwargs': {
+                    'exclude': {3, 5, 8},
+                    },
+                'expected_result': {0, 1, 2, 4, 6, 7, 9},
+                }),
+            ('exclude-one', {
+                'fake_maxfd': 5,
+                'test_kwargs': {
+                    'exclude': {4},
+                    },
+                'expected_result': {0, 1, 2, 3},
+                }),
+            ('exclude-none', {
+                'fake_maxfd': 5,
+                'test_kwargs': {
+                    'exclude': set(),
+                },
+                'expected_result': {0, 1, 2, 3, 4},
+                }),
+            ]
+
+    def test_returns_expected_file_descriptors(self):
+        """ Should return the expected set of file descriptors. """
+        with mock.patch.object(
+                daemon.daemon, "get_maximum_file_descriptors",
+                return_value=self.fake_maxfd):
+            result = daemon.daemon._get_candidate_file_descriptors(
+                    **self.test_kwargs)
+        self.assertEqual(result, self.expected_result)
+
+
+class _get_candidate_file_descriptor_ranges_TestCase(
+        scaffold.TestCaseWithScenarios):
+    """ Test cases for function `_get_candidate_file_descriptor_ranges`. """
+
+    scenarios = [
+            ('exclude-three', {
+                'fake_maxfd': 10,
+                'test_kwargs': {
+                    'exclude': {3, 5, 8},
+                    },
+                'expected_result': [
+                    (0, 3),
+                    (4, 5),
+                    (6, 8),
+                    (9, 10),
+                    ],
+                }),
+            ('exclude-highest', {
+                'fake_maxfd': 5,
+                'test_kwargs': {
+                    'exclude': {4},
+                    },
+                'expected_result': [
+                    (0, 4),
+                    ],
+                }),
+            ('exclude-none', {
+                'fake_maxfd': 5,
+                'test_kwargs': {
+                    'exclude': set(),
+                },
+                'expected_result': [(0, 5)],
+                }),
+            ]
+
+    def test_returns_expected_file_descriptors(self):
+        """ Should return the expected set of file descriptors. """
+        with mock.patch.object(
+                daemon.daemon, "get_maximum_file_descriptors",
+                return_value=self.fake_maxfd):
+            result = daemon.daemon._get_candidate_file_descriptor_ranges(
+                    **self.test_kwargs)
+        self.assertEqual(result, self.expected_result)
+
+
+@mock.patch.object(os, "closerange")
+class _close_file_descriptor_ranges_TestCase(scaffold.TestCaseWithScenarios):
+    """ Test cases for function `_close_file_descriptor_ranges`. """
+
+    scenarios = [
+            ('ranges-one', {
+                'test_kwargs': {
+                    'ranges': [
+                        daemon.daemon.FileDescriptorRange(0, 10),
+                        ],
+                    },
+                'expected_os_closerange_calls': [
+                    mock.call(0, 10),
+                    ],
+                }),
+            ('ranges-three', {
+                'test_kwargs': {
+                    'ranges': [
+                        daemon.daemon.FileDescriptorRange(5, 10),
+                        daemon.daemon.FileDescriptorRange(0, 3),
+                        daemon.daemon.FileDescriptorRange(15, 20),
+                        ],
+                    },
+                'expected_os_closerange_calls': [
+                    mock.call(5, 10),
+                    mock.call(0, 3),
+                    mock.call(15, 20),
+                    ],
+                }),
+            ]
+
+    def test_calls_os_closerange_with_expected_ranges(
+            self, mock_func_os_closerange):
+        """ Should request close of all file descriptors in range. """
+        daemon.daemon._close_file_descriptor_ranges(**self.test_kwargs)
+        mock_func_os_closerange.assert_has_calls(
+                self.expected_os_closerange_calls)
+
+
 class close_all_open_files_TestCase(scaffold.TestCase):
-    """ Test cases for close_all_open_files function. """
+    """ Test cases for function `close_all_open_files`. """
 
-    def test_requests_all_open_files_to_close(
-            self, mock_func_close_file_descriptor_if_open):
-        """ Should request close of all open files. """
-        expected_file_descriptors = range(fake_default_maxfd)
-        expected_calls = [
-                mock.call(fd) for fd in expected_file_descriptors]
-        daemon.daemon.close_all_open_files()
-        mock_func_close_file_descriptor_if_open.assert_has_calls(
-                expected_calls, any_order=True)
+    fake_maxfd = 10
 
-    def test_requests_all_but_excluded_files_to_close(
-            self, mock_func_close_file_descriptor_if_open):
-        """ Should request close of all open files but those excluded. """
+    def setUp(self):
+        """ Set up test fixtures. """
+        super(close_all_open_files_TestCase, self).setUp()
+
+        self.patch_get_maximum_file_descriptors(self.fake_maxfd)
+        self.patch_os_closerange()
+
+    def patch_get_maximum_file_descriptors(self, fake_maxfd):
+        """ Patch `get_maximum_file_descriptors` for this test case. """
+        func_patcher = mock.patch.object(
+            daemon.daemon, "get_maximum_file_descriptors",
+            return_value=fake_maxfd)
+        self.mock_func_get_maximum_file_descriptors = func_patcher.start()
+        self.addCleanup(func_patcher.stop)
+
+    def patch_os_closerange(self):
+        """ Patch `os.closerange` function for this test case. """
+        func_patcher = mock.patch.object(os, "closerange")
+        self.mock_func_os_closerange = func_patcher.start()
+        self.addCleanup(func_patcher.stop)
+
+    def test_closes_each_open_file_descriptor_when_exclude(self):
+        """ Should close each open file, when `exclude` specified. """
         test_exclude = set([3, 7])
-        args = dict(
+        test_kwargs = dict(
                 exclude=test_exclude,
                 )
-        expected_file_descriptors = set(
-                fd for fd in range(fake_default_maxfd)
-                if fd not in test_exclude)
-        expected_calls = [
-                mock.call(fd) for fd in expected_file_descriptors]
-        daemon.daemon.close_all_open_files(**args)
-        mock_func_close_file_descriptor_if_open.assert_has_calls(
-                expected_calls, any_order=True)
+        daemon.daemon.close_all_open_files(**test_kwargs)
+        expected_os_closerange_calls = [
+                mock.call(0, 3),
+                mock.call(4, 7),
+                mock.call(8, self.fake_maxfd),
+                ]
+        self.mock_func_os_closerange.assert_has_calls(
+                expected_os_closerange_calls, any_order=True)
+
+    def test_closes_all_file_descriptors_when_exclude_empty(self):
+        """ Should close all files, when `exclude` is empty. """
+        test_exclude = set()
+        test_kwargs = dict(
+                exclude=test_exclude,
+                )
+        daemon.daemon.close_all_open_files(**test_kwargs)
+        expected_os_closerange_calls = [
+                mock.call(0, self.fake_maxfd),
+                ]
+        self.mock_func_os_closerange.assert_has_calls(
+                expected_os_closerange_calls, any_order=True)
+
+    def test_closes_all_file_descriptors_when_no_exclude(self):
+        """ Should close all files, when no `exclude`. """
+        test_kwargs = dict()
+        daemon.daemon.close_all_open_files(**test_kwargs)
+        expected_os_closerange_calls = [
+                mock.call(0, self.fake_maxfd),
+                ]
+        self.mock_func_os_closerange.assert_has_calls(
+                expected_os_closerange_calls, any_order=True)
 
 
 class detach_process_context_TestCase(scaffold.TestCase):

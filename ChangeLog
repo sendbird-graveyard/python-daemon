@@ -26,6 +26,12 @@ Changes:
 * The test suite now relies on the test discovery feature in
   ‘unittest’. This feature is in Python version 2.7 and later.
 
+* Improve performance of `daemon.close_all_open_files`.
+
+  Thanks to Darek Działak for the implementation.
+
+  Closes: Pagure #10.
+
 
 Version 2.1.2
 =============

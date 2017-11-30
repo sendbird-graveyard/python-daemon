@@ -21,6 +21,7 @@
 from __future__ import (absolute_import, unicode_literals)
 
 import atexit
+import collections
 import errno
 import os
 import pwd
@@ -458,20 +459,18 @@ class DaemonContext:
             items in `files_preserve`, and also each of `stdin`,
             `stdout`, and `stderr`. For each item:
 
-            * If the item is ``None``, it is omitted from the return
-              set.
+            * If the item is ``None``, omit it from the return set.
 
-            * If the item's ``fileno()`` method returns a value, that
-              value is in the return set.
+            * If the item's `fileno` method returns a value, include
+              that value in the return set.
 
-            * Otherwise, the item is in the return set verbatim.
-
+            * Otherwise, include the item verbatim in the return set.
             """
         files_preserve = self.files_preserve
         if files_preserve is None:
             files_preserve = []
         files_preserve.extend(
-                item for item in [self.stdin, self.stdout, self.stderr]
+                item for item in {self.stdin, self.stdout, self.stderr}
                 if hasattr(item, 'fileno'))
 
         exclude_descriptors = set()
@@ -524,6 +523,37 @@ class DaemonContext:
         return signal_handler_map
 
 
+def get_stream_file_descriptors(
+        stdin=sys.stdin,
+        stdout=sys.stdout,
+        stderr=sys.stderr,
+        ):
+    """ Get the set of file descriptors for the process streams.
+
+        :stdin: The input stream for the process (default:
+            `sys.stdin`).
+        :stdout: The ouput stream for the process (default:
+            `sys.stdout`).
+        :stderr: The diagnostic stream for the process (default:
+            `sys.stderr`).
+        :return: A `set` of each file descriptor (integer) for the
+            streams.
+
+        The standard streams are the files `sys.stdin`, `sys.stdout`,
+        `sys.stderr`.
+
+        Streams might in some circumstances be non-file objects.
+        Include in the result only those streams that actually have a
+        file descriptor (as returned by the `fileno` method).
+        """
+    file_descriptors = set(
+            fd for fd in set(
+                _get_file_descriptor(stream)
+                for stream in {stdin, stdout, stderr})
+            if fd is not None)
+    return file_descriptors
+
+
 def _get_file_descriptor(obj):
     """ Get the file descriptor, if the object has one.
 
@@ -534,7 +564,6 @@ def _get_file_descriptor(obj):
         The object may be a non-file object. It may also be a
         file-like object with no support for a file descriptor. In
         either case, return ``None``.
-
         """
     file_descriptor = None
     if hasattr(obj, 'fileno'):
@@ -848,6 +877,80 @@ def get_maximum_file_descriptors():
     return result
 
 
+def _get_candidate_file_descriptors(exclude):
+    """ Get the collection of candidate file descriptors.
+
+        :param exclude: A collection of file descriptors that should
+            be excluded from the return set.
+        :return: The collection (a `set`) of file descriptors that are
+            candidates for files that may be open in this process.
+
+        Determine the set of all `int` values that could be open file
+        descriptors in this process. A file descriptor is a candidate
+        if it is within the range (0, `maxfd`), excluding those
+        integers in the `exclude` collection.
+
+        The `maxfd` value is determined from the standard library
+        `resource` module.
+        """
+    maxfd = get_maximum_file_descriptors()
+    candidates = set(range(0, maxfd)).difference(exclude)
+    return candidates
+
+
+FileDescriptorRange = collections.namedtuple(
+        'FileDescriptorRange', ['low', 'high'])
+
+
+def _get_candidate_file_descriptor_ranges(exclude):
+    """ Get the collection of candidate file descriptor ranges.
+
+        :param exclude: A collection of file descriptors that should
+            be excluded from the return ranges.
+        :return: The collection (a `set`) of ranges that contain the
+            file descriptors that are candidates for files that may be
+            open in this process.
+
+        Determine the ranges – pairs (`low`, `high`) – of `int` values
+        that are candidate file descriptors.
+
+        A value is a candidate if it could be an open file descriptors
+        in this process, excluding those integers in the `exclude`
+        collection.
+        """
+    candidates_list = sorted(_get_candidate_file_descriptors(exclude))
+    ranges = []
+    this_range = FileDescriptorRange(
+            low=min(candidates_list),
+            high=(min(candidates_list) + 1))
+    for fd in candidates_list[1:]:
+        high = fd + 1
+        if this_range.high == fd:
+            # This file descriptor extends the current range.
+            this_range = this_range._replace(high=high)
+        else:
+            # The previous range has ended at a gap.
+            ranges.append(this_range)
+            # This file descriptor begins a new range.
+            this_range = FileDescriptorRange(low=fd, high=high)
+    ranges.append(this_range)
+    return ranges
+
+
+def _close_file_descriptor_ranges(ranges):
+    """ Close file descriptors described by `ranges`.
+
+        :param ranges: A sequence of `FileDescriptorRange` instances,
+            each describing a range of file descriptors to close.
+        :return: ``None``.
+
+        Attempt to close each open file descriptor – starting from
+        `low` and ending before `high` – from each range in `ranges`.
+        """
+    for range in ranges:
+        os.closerange(range.low, range.high)
+
+
 def close_all_open_files(exclude=None):
     """ Close all open file descriptors.
 
@@ -858,14 +961,11 @@ def close_all_open_files(exclude=None):
         Closes every file descriptor (if open) of this process. If
         specified, `exclude` is a set of file descriptors to *not*
         close.
-
         """
     if exclude is None:
         exclude = set()
-    maxfd = get_maximum_file_descriptors()
-    for fd in reversed(range(maxfd)):
-        if fd not in exclude:
-            close_file_descriptor_if_open(fd)
+    fd_ranges = _get_candidate_file_descriptor_ranges(exclude=exclude)
+    _close_file_descriptor_ranges(ranges=fd_ranges)
 
 
 def redirect_stream(system_stream, target_stream):
