@@ -21,6 +21,13 @@ Bug Fixes:
 
   Closes: Pagure #6.
 
+* Set a sensible default for `Distribution.script_name`.
+
+  This works around a bug in Setuptools which calls commands before
+  the `Distribution` is initialised.
+
+  Closes: Pagure #2.
+
 Changes:
 
 * The test suite now relies on the test discovery feature in
