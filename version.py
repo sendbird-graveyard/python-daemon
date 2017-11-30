@@ -639,6 +639,9 @@ class ChangelogAwareDistribution(distutils.dist.Distribution, object):
     def __init__(self, *args, **kwargs):
         super(ChangelogAwareDistribution, self).__init__(*args, **kwargs)
 
+        if self.script_name is None:
+            self.script_name = sys.argv[1]
+
         # Undo the per-instance delegation for these methods.
         del (
                 self.get_version,
