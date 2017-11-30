@@ -907,14 +907,14 @@ def _get_candidate_file_descriptor_ranges(exclude):
 
         :param exclude: A collection of file descriptors that should
             be excluded from the return ranges.
-        :return: The collection (a `set`) of ranges that contain the
+        :return: The collection (a `list`) of ranges that contain the
             file descriptors that are candidates for files that may be
             open in this process.
 
-        Determine the ranges – pairs (`low`, `high`) – of `int` values
-        that are candidate file descriptors.
+        Determine the ranges of all the candidate file descriptors.
+        Each range is a pair of `int` values (`low`, `high`).
 
-        A value is a candidate if it could be an open file descriptors
+        A value is a candidate if it could be an open file descriptor
         in this process, excluding those integers in the `exclude`
         collection.
         """
