@@ -1313,9 +1313,6 @@ class has_changelog_TestCase(
         self.assertEqual(self.expected_result, result)
 
 
-@mock.patch.object(version, 'generate_version_info_from_changelog')
-@mock.patch.object(version, 'serialise_version_info_from_mapping')
-@mock.patch.object(version.EggInfoCommand, "write_file")
 class WriteVersionInfoCommand_run_TestCase(
         WriteVersionInfoCommand_BaseTestCase):
     """ Test cases for ‘WriteVersionInfoCommand.run’ method. """
@@ -1327,52 +1324,69 @@ class WriteVersionInfoCommand_run_TestCase(
         self.test_instance = version.WriteVersionInfoCommand(
                 self.test_distribution)
 
-        self.fake_changelog_path = self.getUniqueString()
-        self.test_instance.changelog_path = self.fake_changelog_path
+        self.fake_changelog_path = self.set_changelog_path(self.test_instance)
+        self.fake_outfile_path = self.set_outfile_path(self.test_instance)
 
-        self.fake_outfile_path = self.getUniqueString()
-        self.test_instance.outfile_path = self.fake_outfile_path
+        self.patch_version_info()
+        self.patch_egg_info_write_file()
 
-    def test_returns_none(
-            self,
-            mock_func_egg_info_write_file,
-            mock_func_serialise_version_info,
-            mock_func_generate_version_info):
+    def set_changelog_path(self, instance):
+        """ Set the changelog path for the test instance `instance`. """
+        self.test_instance.changelog_path = self.getUniqueString()
+        return self.test_instance.changelog_path
+
+    def set_outfile_path(self, instance):
+        """ Set the outfile path for the test instance `instance`. """
+        self.test_instance.outfile_path = self.getUniqueString()
+        return self.test_instance.outfile_path
+
+    def patch_version_info(self):
+        """ Patch the generation of version info. """
+        self.fake_version_info = self.getUniqueString()
+        func_patcher = mock.patch.object(
+                version, 'generate_version_info_from_changelog',
+                return_value=self.fake_version_info)
+        self.mock_func_generate_version_info = func_patcher.start()
+        self.addCleanup(func_patcher.stop)
+
+        self.fake_version_info_serialised = self.getUniqueString()
+        func_patcher = mock.patch.object(
+                version, 'serialise_version_info_from_mapping',
+                return_value=self.fake_version_info_serialised)
+        self.mock_func_serialise_version_info = func_patcher.start()
+        self.addCleanup(func_patcher.stop)
+
+    def patch_egg_info_write_file(self):
+        """ Patch the command `write_file` method for this test case. """
+        func_patcher = mock.patch.object(
+            version.WriteVersionInfoCommand, 'write_file')
+        self.mock_func_egg_info_write_file = func_patcher.start()
+        self.addCleanup(func_patcher.stop)
+
+    def test_returns_none(self):
         """ Should return ``None``. """
         result = self.test_instance.run()
         self.assertIs(result, None)
 
-    def test_generates_version_info_from_changelog(
-            self,
-            mock_func_egg_info_write_file,
-            mock_func_serialise_version_info,
-            mock_func_generate_version_info):
+    def test_generates_version_info_from_changelog(self):
         """ Should generate version info from specified changelog. """
         self.test_instance.run()
         expected_changelog_path = self.test_instance.changelog_path
-        mock_func_generate_version_info.assert_called_with(
+        self.mock_func_generate_version_info.assert_called_with(
                 expected_changelog_path)
 
-    def test_serialises_version_info_from_mapping(
-            self,
-            mock_func_egg_info_write_file,
-            mock_func_serialise_version_info,
-            mock_func_generate_version_info):
+    def test_serialises_version_info_from_mapping(self):
         """ Should serialise version info from specified mapping. """
         self.test_instance.run()
-        expected_version_info = mock_func_generate_version_info.return_value
-        mock_func_serialise_version_info.assert_called_with(
+        expected_version_info = self.fake_version_info
+        self.mock_func_serialise_version_info.assert_called_with(
                 expected_version_info)
 
-    def test_writes_file_using_command_context(
-            self,
-            mock_func_egg_info_write_file,
-            mock_func_serialise_version_info,
-            mock_func_generate_version_info):
+    def test_writes_file_using_command_context(self):
         """ Should write the metadata file using the command context. """
         self.test_instance.run()
-        expected_content = mock_func_serialise_version_info.return_value
-        mock_func_egg_info_write_file.assert_called_with(
+        expected_content = self.fake_version_info_serialised
+        self.mock_func_egg_info_write_file.assert_called_with(
                 "version info", self.fake_outfile_path, expected_content)
 
 
