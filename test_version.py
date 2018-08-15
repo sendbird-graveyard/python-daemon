@@ -1015,7 +1015,7 @@ class get_changelog_path_TestCase(
         testscenarios.WithScenarios, testtools.TestCase):
     """ Test cases for ‘get_changelog_path’ function. """
 
-    default_path = "."
+    default_path = ""
     default_script_filename = "setup.py"
 
     scenarios = [
@@ -1038,14 +1038,17 @@ class get_changelog_path_TestCase(
         """ Set up test fixtures. """
         super(get_changelog_path_TestCase, self).setUp()
 
-        self.test_distribution = mock.MagicMock(distutils.dist.Distribution)
+        test_distribution = distutils.dist.Distribution()
+        self.test_distribution = mock.MagicMock(test_distribution)
 
         if not hasattr(self, 'script_directory'):
             self.script_directory = self.default_path
         if not hasattr(self, 'script_filename'):
             self.script_filename = self.default_script_filename
-        self.test_distribution.script_name = os.path.join(
-                self.script_directory, self.script_filename)
+
+        self.test_distribution.packages = None
+        self.test_distribution.package_dir = {'': self.script_directory}
+        self.test_distribution.script_name = self.script_filename
 
         changelog_filename = version.changelog_filename
         if hasattr(self, 'changelog_filename'):
