@@ -51,6 +51,7 @@ setup_kwargs = dict(
         cmdclass={
             "write_version_info": version.WriteVersionInfoCommand,
             "egg_info": version.EggInfoCommand,
+            "build": version.BuildCommand,
             },
 
         # Setuptools metadata.

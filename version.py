@@ -499,7 +499,8 @@ def generate_version_info_from_changelog(infile_path):
 
     if versions_all_json is not None:
         versions_all = json.loads(versions_all_json.decode('utf-8'))
-        version_info = get_latest_version(versions_all)
+        # The changelog will have the latest entry first.
+        version_info = versions_all[0]
 
     return version_info
 
@@ -548,7 +549,9 @@ def get_changelog_path(distribution, filename=changelog_filename):
             if not discoverable.
 
         """
-    setup_dirname = os.path.dirname(distribution.script_name)
+    build_py_command = distutils.command.build_py.build_py(distribution)
+    build_py_command.finalize_options()
+    setup_dirname = build_py_command.get_package_dir("")
     filepath = os.path.join(setup_dirname, filename)
 
     return filepath
@@ -564,6 +567,15 @@ def has_changelog(command):
             result = True
 
     return result
+
+
+class BuildCommand(distutils.command.build.build, object):
+    """ Custom ‘build’ command for this distribution. """
+
+    sub_commands = (
+            distutils.command.build.build.sub_commands + [
+                ('write_version_info', has_changelog),
+            ])
 
 
 class EggInfoCommand(setuptools.command.egg_info.egg_info, object):
@@ -583,7 +595,7 @@ class EggInfoCommand(setuptools.command.egg_info.egg_info, object):
 
 version_info_filename = "version_info.json"
 
-class WriteVersionInfoCommand(EggInfoCommand, object):
+class WriteVersionInfoCommand(setuptools.command.egg_info.egg_info, object):
     """ Setuptools command to serialise version info metadata. """
 
     user_options = ([
@@ -591,7 +603,7 @@ class WriteVersionInfoCommand(EggInfoCommand, object):
              "Filesystem path to the changelog document."),
             ("outfile-path=", None,
              "Filesystem path to the version info file."),
-            ] + EggInfoCommand.user_options)
+            ] + setuptools.command.egg_info.egg_info.user_options)
 
     def initialize_options(self):
         """ Initialise command options to defaults. """
@@ -638,6 +650,9 @@ class ChangelogAwareDistribution(distutils.dist.Distribution, object):
 
     def __init__(self, *args, **kwargs):
         super(ChangelogAwareDistribution, self).__init__(*args, **kwargs)
+
+        if self.script_name is None:
+            self.script_name = sys.argv[1]
 
         # Undo the per-instance delegation for these methods.
         del (
