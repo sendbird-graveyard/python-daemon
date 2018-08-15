@@ -3,12 +3,9 @@
 # test/scaffold.py
 # Part of ‘python-daemon’, an implementation of PEP 3143.
 #
-# Copyright © 2007–2017 Ben Finney <ben+python@benfinney.id.au>
-#
-# This is free software: you may copy, modify, and/or distribute this work
-# under the terms of the Apache License, version 2.0 as published by the
-# Apache Software Foundation.
-# No warranty expressed or implied. See the file ‘LICENSE.ASF-2’ for details.
+# This is free software, and you are welcome to redistribute it under
+# certain conditions; see the end of this file for copyright
+# information, grant of license, and disclaimer of warranty.
 
 """ Scaffolding for unit test modules.
     """
@@ -303,6 +300,14 @@ def make_exception_scenarios(scenarios):
         scenario['instance'] = instance
 
     return updated_scenarios
+
+
+# Copyright © 2007–2018 Ben Finney <ben+python@benfinney.id.au>
+#
+# This is free software: you may copy, modify, and/or distribute this work
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation; version 3 of that license or any later version.
+# No warranty expressed or implied. See the file ‘LICENSE.GPL-3’ for details.
 
 
 # Local variables:

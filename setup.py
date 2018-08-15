@@ -101,10 +101,10 @@ if __name__ == '__main__':
     setup(**setup_kwargs)
 
 
-# Copyright © 2008–2017 Ben Finney <ben+python@benfinney.id.au>
+# Copyright © 2008–2018 Ben Finney <ben+python@benfinney.id.au>
 #
 # This is free software: you may copy, modify, and/or distribute this work
-# under the terms of the GNU Affero General Public License as published by the
+# under the terms of the GNU General Public License as published by the
 # Free Software Foundation; version 3 of that license or any later version.
 # No warranty expressed or implied. See the file ‘LICENSE.GPL-3’ for details.
 

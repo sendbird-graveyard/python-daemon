@@ -3,17 +3,9 @@
 # daemon/daemon.py
 # Part of ‘python-daemon’, an implementation of PEP 3143.
 #
-# Copyright © 2008–2017 Ben Finney <ben+python@benfinney.id.au>
-# Copyright © 2007–2008 Robert Niederreiter, Jens Klein
-# Copyright © 2004–2005 Chad J. Schroeder
-# Copyright © 2003 Clark Evans
-# Copyright © 2002 Noah Spurrier
-# Copyright © 2001 Jürgen Hermann
-#
-# This is free software: you may copy, modify, and/or distribute this work
-# under the terms of the Apache License, version 2.0 as published by the
-# Apache Software Foundation.
-# No warranty expressed or implied. See the file ‘LICENSE.ASF-2’ for details.
+# This is free software, and you are welcome to redistribute it under
+# certain conditions; see the end of this file for copyright
+# information, grant of license, and disclaimer of warranty.
 
 """ Daemon process behaviour.
     """
@@ -1064,6 +1056,19 @@ def _chain_exception_from_existing_exception_context(exc, as_cause=False):
     else:
         exc.__context__ = existing_exc
     exc.__traceback__ = existing_traceback
+
+
+# Copyright © 2008–2018 Ben Finney <ben+python@benfinney.id.au>
+# Copyright © 2007–2008 Robert Niederreiter, Jens Klein
+# Copyright © 2004–2005 Chad J. Schroeder
+# Copyright © 2003 Clark Evans
+# Copyright © 2002 Noah Spurrier
+# Copyright © 2001 Jürgen Hermann
+#
+# This is free software: you may copy, modify, and/or distribute this work
+# under the terms of the Apache License, version 2.0 as published by the
+# Apache Software Foundation.
+# No warranty expressed or implied. See the file ‘LICENSE.ASF-2’ for details.
 
 
 # Local variables:
