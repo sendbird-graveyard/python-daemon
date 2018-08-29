@@ -14,7 +14,10 @@ Version NEXT
 :Released: FUTURE
 :Maintainer: UNKNOWN <unknown@example.org>
 
-No changes.
+Additions:
+
+* Add a :PEP:`518` conformant build system specification (the
+  ``pyproject.toml`` file).
 
 
 Version 2.2.0
