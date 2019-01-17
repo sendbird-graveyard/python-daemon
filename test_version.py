@@ -1471,7 +1471,7 @@ class EggInfoCommand_run_TestCase(testtools.TestCase):
         mock_func_egg_info_run.assert_called_with()
 
 
-# Copyright © 2008–2018 Ben Finney <ben+python@benfinney.id.au>
+# Copyright © 2008–2019 Ben Finney <ben+python@benfinney.id.au>
 #
 # This is free software: you may copy, modify, and/or distribute this work
 # under the terms of the GNU General Public License as published by the

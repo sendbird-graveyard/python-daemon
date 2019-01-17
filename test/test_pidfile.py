@@ -456,7 +456,7 @@ class TimeoutPIDLockFile_TestCase(scaffold.TestCase):
         mock_func_acquire.assert_called_with(instance, expected_timeout)
 
 
-# Copyright © 2008–2018 Ben Finney <ben+python@benfinney.id.au>
+# Copyright © 2008–2019 Ben Finney <ben+python@benfinney.id.au>
 #
 # This is free software: you may copy, modify, and/or distribute this work
 # under the terms of the GNU General Public License as published by the

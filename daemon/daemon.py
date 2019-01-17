@@ -1058,7 +1058,7 @@ def _chain_exception_from_existing_exception_context(exc, as_cause=False):
     exc.__traceback__ = existing_traceback
 
 
-# Copyright © 2008–2018 Ben Finney <ben+python@benfinney.id.au>
+# Copyright © 2008–2019 Ben Finney <ben+python@benfinney.id.au>
 # Copyright © 2007–2008 Robert Niederreiter, Jens Klein
 # Copyright © 2004–2005 Chad J. Schroeder
 # Copyright © 2003 Clark Evans

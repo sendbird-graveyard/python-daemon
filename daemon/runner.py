@@ -321,7 +321,7 @@ def is_pidfile_stale(pidfile):
     return result
 
 
-# Copyright © 2009–2018 Ben Finney <ben+python@benfinney.id.au>
+# Copyright © 2009–2019 Ben Finney <ben+python@benfinney.id.au>
 # Copyright © 2007–2008 Robert Niederreiter, Jens Klein
 # Copyright © 2003 Clark Evans
 # Copyright © 2002 Noah Spurrier

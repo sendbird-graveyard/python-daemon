@@ -654,7 +654,7 @@ class is_pidfile_stale_TestCase(scaffold.TestCase):
         self.assertEqual(expected_result, result)
 
 
-# Copyright © 2009–2018 Ben Finney <ben+python@benfinney.id.au>
+# Copyright © 2009–2019 Ben Finney <ben+python@benfinney.id.au>
 #
 # This is free software: you may copy, modify, and/or distribute this work
 # under the terms of the GNU General Public License as published by the
