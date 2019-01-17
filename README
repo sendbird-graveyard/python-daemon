@@ -61,7 +61,7 @@ files for specific grant of license. No warranty expressed or implied.
 ..
     Local variables:
     coding: utf-8
-    mode: text
     mode: rst
+    mode: text
     End:
     vim: fileencoding=utf-8 filetype=rst :

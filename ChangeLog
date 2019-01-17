@@ -623,7 +623,7 @@ Changes:
 ..
     Local variables:
     coding: utf-8
-    mode: text
     mode: rst
+    mode: text
     End:
     vim: fileencoding=utf-8 filetype=rst :

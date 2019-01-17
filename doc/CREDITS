@@ -52,8 +52,8 @@ People who have also contributed substantial improvements:
 ..
     Local variables:
     coding: utf-8
-    mode: text
     mode: rst
+    mode: text
     time-stamp-format: "%:y-%02m-%02d"
     time-stamp-start: "^:Updated:[	 ]+"
     time-stamp-end: "$"
