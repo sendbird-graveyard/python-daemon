@@ -1,0 +1,10 @@
+# pip-requirements/base.txt
+# Python distributions required for this code base.
+# Documentation: <URL:https://pip.readthedocs.io/en/stable/reference/pip_install/#requirements-file-format>.
+
+
+# Local variables:
+# coding: utf-8
+# mode: conf
+# End:
+# vim: fileencoding=utf-8 filetype=conf :
