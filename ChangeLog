@@ -14,7 +14,10 @@ Version NEXT
 :Released: FUTURE
 :Maintainer: UNKNOWN <unknown@example.org>
 
-No changes.
+Bug Fixes:
+
+* Remove from the build system specification a white space character
+  not permitted in TOML format.
 
 
 Version 2.2.1
