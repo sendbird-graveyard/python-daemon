@@ -19,6 +19,10 @@ Bug Fixes:
 * Remove from the build system specification a white space character
   not permitted in TOML format.
 
+Additions:
+
+* Implement test suite automation in virtualenvs, using Tox.
+
 
 Version 2.2.1
 =============
