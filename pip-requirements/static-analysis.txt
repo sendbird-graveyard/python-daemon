@@ -1,0 +1,15 @@
+# pip-requirements/static-analysis.txt
+# Python distributions required for static analysis of this code base.
+# Documentation: <URL:https://pip.readthedocs.io/en/stable/reference/pip_install/#requirements-file-format>.
+
+-r base.txt
+
+# Python code-analysis tools.
+pycodestyle==2.4.0
+
+
+# Local variables:
+# coding: utf-8
+# mode: conf
+# End:
+# vim: fileencoding=utf-8 filetype=conf :

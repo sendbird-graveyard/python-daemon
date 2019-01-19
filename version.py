@@ -121,9 +121,10 @@ class VersionInfoWriter(object):
 
 
 rfc822_person_regex = re.compile(
-        "^(?P<name>[^<]+) <(?P<email>[^>]+)>$")
+        r"^(?P<name>[^<]+) <(?P<email>[^>]+)>$")
 
 ParsedPerson = collections.namedtuple('ParsedPerson', ['name', 'email'])
+
 
 def parse_person_field(value):
     """ Parse a person field into name and email address.
@@ -473,7 +474,8 @@ try:
 except AttributeError:
     # Python < 3.2 does not have the `functools.lru_cache` function.
     # Not essential, so replace it with a no-op.
-    lru_cache = lambda maxsize=None, typed=False: lambda func: func
+    def lru_cache(maxsize=None, typed=False):
+        return (lambda func: func)
 
 
 @lru_cache(maxsize=128)
@@ -540,6 +542,7 @@ def serialise_version_info_from_mapping(version_info):
 
 changelog_filename = "ChangeLog"
 
+
 def get_changelog_path(distribution, filename=changelog_filename):
     """ Get the changelog file path for the distribution.
 
@@ -594,6 +597,7 @@ class EggInfoCommand(setuptools.command.egg_info.egg_info, object):
 
 
 version_info_filename = "version_info.json"
+
 
 class WriteVersionInfoCommand(setuptools.command.egg_info.egg_info, object):
     """ Setuptools command to serialise version info metadata. """

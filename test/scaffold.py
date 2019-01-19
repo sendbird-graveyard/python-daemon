@@ -68,8 +68,9 @@ def get_function_signature(func):
     if func_defaults is not None:
         arg_defaults = dict(
                 (name, value)
-                for (name, value) in
+                for (name, value) in (
                     zip(arg_names[::-1], func_defaults[::-1]))
+                )
 
     signature = {
             'name': func.__name__,

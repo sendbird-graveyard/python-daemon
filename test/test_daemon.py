@@ -87,6 +87,7 @@ def setup_daemon_context_fixtures(testcase):
             testcase.getUniqueString(),  # pw_dir
             testcase.getUniqueString(),  # pw_shell
             ])
+
     def fake_getpwuid(uid):
         pwent = None
         if uid == testcase.test_pwent.pw_uid:
@@ -109,7 +110,9 @@ def setup_daemon_context_fixtures(testcase):
     testcase.test_instance = daemon.DaemonContext(
             **testcase.daemon_context_args)
 
+
 fake_default_signal_map = object()
+
 
 @mock.patch.object(
         daemon.daemon, "is_detach_process_context_required",
@@ -361,18 +364,17 @@ class DaemonContext_open_TestCase(DaemonContext_BaseTestCase):
         self.test_files_preserve_fds = object()
         self.test_signal_handler_map = object()
         daemoncontext_method_return_values = {
-                '_get_exclude_file_descriptors':
-                    self.test_files_preserve_fds,
-                '_make_signal_handler_map':
-                    self.test_signal_handler_map,
+                '_get_exclude_file_descriptors': self.test_files_preserve_fds,
+                '_make_signal_handler_map': self.test_signal_handler_map,
                 }
         daemoncontext_func_patchers = dict(
                 (func_name, mock.patch.object(
                     daemon.daemon.DaemonContext,
                     func_name,
                     return_value=return_value))
-                for (func_name, return_value) in
+                for (func_name, return_value) in (
                     daemoncontext_method_return_values.items())
+                )
         for (func_name, patcher) in daemoncontext_func_patchers.items():
             mock_func = patcher.start()
             self.addCleanup(patcher.stop)
@@ -1189,6 +1191,7 @@ RLimitResult = collections.namedtuple('RLimitResult', ['soft', 'hard'])
 
 fake_RLIMIT_CORE = object()
 
+
 @mock.patch.object(resource, "RLIMIT_CORE", new=fake_RLIMIT_CORE)
 @mock.patch.object(resource, "setrlimit", side_effect=(lambda x, y: None))
 @mock.patch.object(resource, "getrlimit", side_effect=(lambda x: None))
@@ -1215,11 +1218,13 @@ class prevent_core_dump_TestCase(scaffold.TestCase):
             mock_func_resource_getrlimit, mock_func_resource_setrlimit):
         """ Should raise DaemonError if no RLIMIT_CORE resource. """
         test_error = ValueError("Bogus platform doesn't have RLIMIT_CORE")
+
         def fake_getrlimit(res):
             if res == resource.RLIMIT_CORE:
                 raise test_error
             else:
                 return None
+
         mock_func_resource_getrlimit.side_effect = fake_getrlimit
         expected_error = daemon.daemon.DaemonOSEnvironmentError
         exc = self.assertRaises(
@@ -1291,6 +1296,22 @@ class get_stream_file_descriptors_TestCase(scaffold.TestCase):
         self.assertEqual(result, expected_fds)
 
 
+def make_fake_os_close_raising_error(error):
+    """ Make a fake function to replace `os.close`, that raises `error`.
+
+        :param error: The exception instance to raise when the new
+            function is called.
+        :return: The new function object.
+
+        The function created accepts a single argument, `fd`, and does
+        nothing when called but raise the `error`.
+        """
+    def fake_os_close(fd):
+        raise error
+
+    return fake_os_close
+
+
 @mock.patch.object(os, "close")
 class close_file_descriptor_if_open_TestCase(scaffold.TestCase):
     """ Test cases for close_file_descriptor_if_open function. """
@@ -1311,9 +1332,8 @@ class close_file_descriptor_if_open_TestCase(scaffold.TestCase):
         """ Should ignore OSError EBADF when closing. """
         fd = self.fake_fd
         test_error = OSError(errno.EBADF, "Bad file descriptor")
-        def fake_os_close(fd):
-            raise test_error
-        mock_func_os_close.side_effect = fake_os_close
+        mock_func_os_close.side_effect = make_fake_os_close_raising_error(
+            test_error)
         daemon.daemon.close_file_descriptor_if_open(fd)
         mock_func_os_close.assert_called_with(fd)
 
@@ -1321,9 +1341,8 @@ class close_file_descriptor_if_open_TestCase(scaffold.TestCase):
         """ Should raise DaemonError if an OSError occurs when closing. """
         fd = self.fake_fd
         test_error = OSError(object(), "Unexpected error")
-        def fake_os_close(fd):
-            raise test_error
-        mock_func_os_close.side_effect = fake_os_close
+        mock_func_os_close.side_effect = make_fake_os_close_raising_error(
+            test_error)
         expected_error = daemon.daemon.DaemonOSEnvironmentError
         exc = self.assertRaises(
                 expected_error,
@@ -1334,9 +1353,8 @@ class close_file_descriptor_if_open_TestCase(scaffold.TestCase):
         """ Should raise DaemonError if an IOError occurs when closing. """
         fd = self.fake_fd
         test_error = IOError(object(), "Unexpected error")
-        def fake_os_close(fd):
-            raise test_error
-        mock_func_os_close.side_effect = fake_os_close
+        mock_func_os_close.side_effect = make_fake_os_close_raising_error(
+            test_error)
         expected_error = daemon.daemon.DaemonOSEnvironmentError
         exc = self.assertRaises(
                 expected_error,
@@ -1381,11 +1399,13 @@ fake_RLIMIT_NOFILE = object()
 fake_RLIM_INFINITY = object()
 fake_rlimit_nofile_large = 2468
 
+
 def fake_getrlimit_nofile_soft_infinity(resource):
     result = RLimitResult(soft=fake_RLIM_INFINITY, hard=object())
     if resource != fake_RLIMIT_NOFILE:
         result = NotImplemented
     return result
+
 
 def fake_getrlimit_nofile_hard_infinity(resource):
     result = RLimitResult(soft=object(), hard=fake_RLIM_INFINITY)
@@ -1393,11 +1413,13 @@ def fake_getrlimit_nofile_hard_infinity(resource):
         result = NotImplemented
     return result
 
+
 def fake_getrlimit_nofile_hard_large(resource):
     result = RLimitResult(soft=object(), hard=fake_rlimit_nofile_large)
     if resource != fake_RLIMIT_NOFILE:
         result = NotImplemented
     return result
+
 
 @mock.patch.object(daemon.daemon, "MAXFD", new=fake_default_maxfd)
 @mock.patch.object(resource, "RLIMIT_NOFILE", new=fake_RLIMIT_NOFILE)
