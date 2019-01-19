@@ -52,6 +52,7 @@ def get_distribution_version_info(filename=version_info_filename):
 
     return version_info
 
+
 version_info = get_distribution_version_info()
 
 version_installed = version_info['version']
@@ -105,6 +106,7 @@ def make_year_range(begin_year, end_date=None):
     year_range = YearRange(begin=begin_year, end=end_year)
 
     return year_range
+
 
 copyright_year_begin = "2001"
 build_date = version_info['release_date']

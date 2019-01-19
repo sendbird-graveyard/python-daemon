@@ -87,6 +87,7 @@ def setup_daemon_context_fixtures(testcase):
             testcase.getUniqueString(),  # pw_dir
             testcase.getUniqueString(),  # pw_shell
             ])
+
     def fake_getpwuid(uid):
         pwent = None
         if uid == testcase.test_pwent.pw_uid:
@@ -109,7 +110,9 @@ def setup_daemon_context_fixtures(testcase):
     testcase.test_instance = daemon.DaemonContext(
             **testcase.daemon_context_args)
 
+
 fake_default_signal_map = object()
+
 
 @mock.patch.object(
         daemon.daemon, "is_detach_process_context_required",
@@ -1188,6 +1191,7 @@ RLimitResult = collections.namedtuple('RLimitResult', ['soft', 'hard'])
 
 fake_RLIMIT_CORE = object()
 
+
 @mock.patch.object(resource, "RLIMIT_CORE", new=fake_RLIMIT_CORE)
 @mock.patch.object(resource, "setrlimit", side_effect=(lambda x, y: None))
 @mock.patch.object(resource, "getrlimit", side_effect=(lambda x: None))
@@ -1214,11 +1218,13 @@ class prevent_core_dump_TestCase(scaffold.TestCase):
             mock_func_resource_getrlimit, mock_func_resource_setrlimit):
         """ Should raise DaemonError if no RLIMIT_CORE resource. """
         test_error = ValueError("Bogus platform doesn't have RLIMIT_CORE")
+
         def fake_getrlimit(res):
             if res == resource.RLIMIT_CORE:
                 raise test_error
             else:
                 return None
+
         mock_func_resource_getrlimit.side_effect = fake_getrlimit
         expected_error = daemon.daemon.DaemonOSEnvironmentError
         exc = self.assertRaises(
@@ -1393,11 +1399,13 @@ fake_RLIMIT_NOFILE = object()
 fake_RLIM_INFINITY = object()
 fake_rlimit_nofile_large = 2468
 
+
 def fake_getrlimit_nofile_soft_infinity(resource):
     result = RLimitResult(soft=fake_RLIM_INFINITY, hard=object())
     if resource != fake_RLIMIT_NOFILE:
         result = NotImplemented
     return result
+
 
 def fake_getrlimit_nofile_hard_infinity(resource):
     result = RLimitResult(soft=object(), hard=fake_RLIM_INFINITY)
@@ -1405,11 +1413,13 @@ def fake_getrlimit_nofile_hard_infinity(resource):
         result = NotImplemented
     return result
 
+
 def fake_getrlimit_nofile_hard_large(resource):
     result = RLimitResult(soft=object(), hard=fake_rlimit_nofile_large)
     if resource != fake_RLIMIT_NOFILE:
         result = NotImplemented
     return result
+
 
 @mock.patch.object(daemon.daemon, "MAXFD", new=fake_default_maxfd)
 @mock.patch.object(resource, "RLIMIT_NOFILE", new=fake_RLIMIT_NOFILE)

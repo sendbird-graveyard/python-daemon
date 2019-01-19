@@ -805,6 +805,7 @@ fake_version_info = {
         'maintainer': None, 'body': None,
         }
 
+
 @mock.patch.object(
         version, "get_latest_version", return_value=fake_version_info)
 class generate_version_info_from_changelog_TestCase(
@@ -905,6 +906,7 @@ class generate_version_info_from_changelog_TestCase(
 
 DefaultNoneDict = functools.partial(collections.defaultdict, lambda: None)
 
+
 class get_latest_version_TestCase(
         testscenarios.WithScenarios, testtools.TestCase):
     """ Test cases for ‘get_latest_version’ function. """
@@ -994,6 +996,7 @@ Distribution_defaults = {
         }
 FakeDistribution = collections.namedtuple(
         'FakeDistribution', Distribution_defaults.keys())
+
 
 def make_fake_distribution(
         fields_override=None, metadata_fields_override=None):
@@ -1395,6 +1398,7 @@ class WriteVersionInfoCommand_run_TestCase(
 
 IsSubset = testtools.matchers.MatchesPredicateWithParams(
         set.issubset, "{0} should be a subset of {1}")
+
 
 class EggInfoCommand_TestCase(testtools.TestCase):
     """ Test cases for ‘EggInfoCommand’ class. """

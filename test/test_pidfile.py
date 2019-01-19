@@ -298,21 +298,26 @@ def make_lockfile_method_fakes(scenario):
 
     def fake_func_read_pid():
         return scenario['pidfile_pid']
+
     def fake_func_is_locked():
         return (scenario['locking_pid'] is not None)
+
     def fake_func_i_am_locking():
         return (
                 scenario['locking_pid'] == scenario['pid'])
+
     def fake_func_acquire(timeout=None):
         if scenario['locking_pid'] is not None:
             raise lockfile.AlreadyLocked()
         scenario['locking_pid'] = scenario['pid']
+
     def fake_func_release():
         if scenario['locking_pid'] is None:
             raise lockfile.NotLocked()
         if scenario['locking_pid'] != scenario['pid']:
             raise lockfile.NotMyLock()
         scenario['locking_pid'] = None
+
     def fake_func_break_lock():
         scenario['locking_pid'] = None
 

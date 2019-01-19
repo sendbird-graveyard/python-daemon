@@ -542,6 +542,7 @@ def serialise_version_info_from_mapping(version_info):
 
 changelog_filename = "ChangeLog"
 
+
 def get_changelog_path(distribution, filename=changelog_filename):
     """ Get the changelog file path for the distribution.
 
@@ -596,6 +597,7 @@ class EggInfoCommand(setuptools.command.egg_info.egg_info, object):
 
 
 version_info_filename = "version_info.json"
+
 
 class WriteVersionInfoCommand(setuptools.command.egg_info.egg_info, object):
     """ Setuptools command to serialise version info metadata. """

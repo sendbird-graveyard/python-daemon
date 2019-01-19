@@ -849,6 +849,7 @@ def close_file_descriptor_if_open(fd):
 
 MAXFD = 2048
 
+
 def get_maximum_file_descriptors():
     """ Get the maximum number of open file descriptors for this process.
 

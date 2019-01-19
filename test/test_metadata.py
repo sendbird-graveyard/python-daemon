@@ -137,6 +137,7 @@ class YearRange_TestCase(scaffold.TestCaseWithScenarios):
 
 FakeYearRange = collections.namedtuple('FakeYearRange', ['begin', 'end'])
 
+
 @mock.patch.object(metadata, 'YearRange', new=FakeYearRange)
 class make_year_range_TestCase(scaffold.TestCaseWithScenarios):
     """ Test cases for ‘make_year_range’ function. """
@@ -223,6 +224,7 @@ except NameError:
     FileNotFoundError = functools.partial(IOError, errno.ENOENT)
 
 version_info_filename = "version_info.json"
+
 
 def fake_func_has_metadata(testcase, resource_name):
     """ Fake the behaviour of ‘pkg_resources.Distribution.has_metadata’. """
