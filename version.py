@@ -473,7 +473,8 @@ try:
 except AttributeError:
     # Python < 3.2 does not have the `functools.lru_cache` function.
     # Not essential, so replace it with a no-op.
-    lru_cache = lambda maxsize=None, typed=False: lambda func: func
+    def lru_cache(maxsize=None, typed=False):
+        return (lambda func: func)
 
 
 @lru_cache(maxsize=128)
