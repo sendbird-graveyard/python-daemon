@@ -8,6 +8,15 @@ Version strings conform to the `Semantic Versioning`_ specification,
 ..  _Semantic Versioning: https://semver.org/
 
 
+Version NEXT
+============
+
+:Released: FUTURE
+:Maintainer: UNKNOWN <unknown@example.org>
+
+No changes.
+
+
 Version 2.2.2
 =============
 
