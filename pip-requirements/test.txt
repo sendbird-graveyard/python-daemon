@@ -1,0 +1,18 @@
+# pip-requirements/test.txt
+# Python distributions required for automated testing this code base.
+# Documentation: <URL:https://pip.readthedocs.io/en/stable/reference/pip_install/#requirements-file-format>.
+
+-r static-analysis.txt
+
+# Data-driven test scenarios for ‘unittest’.
+testscenarios==0.5.0
+
+# Test automation tool using VirtualEnv.
+tox==2.5.0
+
+
+# Local variables:
+# coding: utf-8
+# mode: conf
+# End:
+# vim: fileencoding=utf-8 filetype=conf :
