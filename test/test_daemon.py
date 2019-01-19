@@ -371,8 +371,9 @@ class DaemonContext_open_TestCase(DaemonContext_BaseTestCase):
                     daemon.daemon.DaemonContext,
                     func_name,
                     return_value=return_value))
-                for (func_name, return_value) in
+                for (func_name, return_value) in (
                     daemoncontext_method_return_values.items())
+                )
         for (func_name, patcher) in daemoncontext_func_patchers.items():
             mock_func = patcher.start()
             self.addCleanup(patcher.stop)

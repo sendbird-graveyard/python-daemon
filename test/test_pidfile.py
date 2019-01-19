@@ -321,7 +321,7 @@ def make_lockfile_method_fakes(scenario):
                 func_name.replace('fake_func_', ''),
                 mock.MagicMock(side_effect=fake_func))
             for (func_name, fake_func) in vars().items()
-                if func_name.startswith('fake_func_'))
+            if func_name.startswith('fake_func_'))
 
     return fake_methods
 
@@ -341,8 +341,8 @@ def apply_lockfile_method_mocks(mock_lockfile, testcase, scenario):
         """
     fake_methods = dict(
             (func_name, fake_func)
-            for (func_name, fake_func) in
-                make_lockfile_method_fakes(scenario).items()
+            for (func_name, fake_func) in (
+                make_lockfile_method_fakes(scenario).items())
             if func_name not in ['read_pid'])
 
     for (func_name, fake_func) in fake_methods.items():
