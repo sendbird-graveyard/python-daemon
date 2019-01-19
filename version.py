@@ -121,9 +121,10 @@ class VersionInfoWriter(object):
 
 
 rfc822_person_regex = re.compile(
-        "^(?P<name>[^<]+) <(?P<email>[^>]+)>$")
+        r"^(?P<name>[^<]+) <(?P<email>[^>]+)>$")
 
 ParsedPerson = collections.namedtuple('ParsedPerson', ['name', 'email'])
+
 
 def parse_person_field(value):
     """ Parse a person field into name and email address.

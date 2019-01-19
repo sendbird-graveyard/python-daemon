@@ -181,9 +181,9 @@ class metadata_content_TestCase(scaffold.TestCase):
     def test_copyright_formatted_correctly(self):
         """ Copyright statement should be formatted correctly. """
         regex_pattern = (
-                "Copyright © "
-                "\d{4}"  # Four-digit year.
-                "(?:–\d{4})?"  # Optional range dash and four-digit year.
+                r"Copyright © "
+                r"\d{4}"  # Four-digit year.
+                r"(?:–\d{4})?"  # Optional range dash and four-digit year.
                 )
         regex_flags = re.UNICODE
         self.assertThat(
@@ -193,8 +193,8 @@ class metadata_content_TestCase(scaffold.TestCase):
     def test_author_formatted_correctly(self):
         """ Author information should be formatted correctly. """
         regex_pattern = (
-                ".+ "  # Name.
-                "<[^>]+>"  # Email address, in angle brackets.
+                r".+ "  # Name.
+                r"<[^>]+>"  # Email address, in angle brackets.
                 )
         regex_flags = re.UNICODE
         self.assertThat(
