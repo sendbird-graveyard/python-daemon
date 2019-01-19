@@ -361,10 +361,8 @@ class DaemonContext_open_TestCase(DaemonContext_BaseTestCase):
         self.test_files_preserve_fds = object()
         self.test_signal_handler_map = object()
         daemoncontext_method_return_values = {
-                '_get_exclude_file_descriptors':
-                    self.test_files_preserve_fds,
-                '_make_signal_handler_map':
-                    self.test_signal_handler_map,
+                '_get_exclude_file_descriptors': self.test_files_preserve_fds,
+                '_make_signal_handler_map': self.test_signal_handler_map,
                 }
         daemoncontext_func_patchers = dict(
                 (func_name, mock.patch.object(
