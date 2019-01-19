@@ -1291,6 +1291,22 @@ class get_stream_file_descriptors_TestCase(scaffold.TestCase):
         self.assertEqual(result, expected_fds)
 
 
+def make_fake_os_close_raising_error(error):
+    """ Make a fake function to replace `os.close`, that raises `error`.
+
+        :param error: The exception instance to raise when the new
+            function is called.
+        :return: The new function object.
+
+        The function created accepts a single argument, `fd`, and does
+        nothing when called but raise the `error`.
+        """
+    def fake_os_close(fd):
+        raise error
+
+    return fake_os_close
+
+
 @mock.patch.object(os, "close")
 class close_file_descriptor_if_open_TestCase(scaffold.TestCase):
     """ Test cases for close_file_descriptor_if_open function. """
@@ -1311,9 +1327,8 @@ class close_file_descriptor_if_open_TestCase(scaffold.TestCase):
         """ Should ignore OSError EBADF when closing. """
         fd = self.fake_fd
         test_error = OSError(errno.EBADF, "Bad file descriptor")
-        def fake_os_close(fd):
-            raise test_error
-        mock_func_os_close.side_effect = fake_os_close
+        mock_func_os_close.side_effect = make_fake_os_close_raising_error(
+            test_error)
         daemon.daemon.close_file_descriptor_if_open(fd)
         mock_func_os_close.assert_called_with(fd)
 
@@ -1321,9 +1336,8 @@ class close_file_descriptor_if_open_TestCase(scaffold.TestCase):
         """ Should raise DaemonError if an OSError occurs when closing. """
         fd = self.fake_fd
         test_error = OSError(object(), "Unexpected error")
-        def fake_os_close(fd):
-            raise test_error
-        mock_func_os_close.side_effect = fake_os_close
+        mock_func_os_close.side_effect = make_fake_os_close_raising_error(
+            test_error)
         expected_error = daemon.daemon.DaemonOSEnvironmentError
         exc = self.assertRaises(
                 expected_error,
@@ -1334,9 +1348,8 @@ class close_file_descriptor_if_open_TestCase(scaffold.TestCase):
         """ Should raise DaemonError if an IOError occurs when closing. """
         fd = self.fake_fd
         test_error = IOError(object(), "Unexpected error")
-        def fake_os_close(fd):
-            raise test_error
-        mock_func_os_close.side_effect = fake_os_close
+        mock_func_os_close.side_effect = make_fake_os_close_raising_error(
+            test_error)
         expected_error = daemon.daemon.DaemonOSEnvironmentError
         exc = self.assertRaises(
                 expected_error,
