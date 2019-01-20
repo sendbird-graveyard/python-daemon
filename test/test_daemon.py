@@ -1243,7 +1243,11 @@ class get_stream_file_descriptors_TestCase(scaffold.TestCase):
         super(get_stream_file_descriptors_TestCase, self).setUp()
 
         self.patch_get_maximum_file_descriptors()
-        self.patch_standard_streams_fileno()
+        self.fake_streams = dict(
+                stdin=FakeFileDescriptorStringIO(),
+                stdout=FakeFileDescriptorStringIO(),
+                stderr=FakeFileDescriptorStringIO(),
+                )
 
     def patch_get_maximum_file_descriptors(self):
         """ Patch the function `get_maximum_file_descriptors`. """
@@ -1252,19 +1256,6 @@ class get_stream_file_descriptors_TestCase(scaffold.TestCase):
                 return_value=self.fake_maxfd)
         self.mock_get_maximum_file_descriptors = func_patcher.start()
         self.addCleanup(func_patcher.stop)
-
-    def patch_standard_streams_fileno(self):
-        """ Patch the method `fileno` of standard streams. """
-        available_fileno_results = list(range(0, (self.fake_maxfd + 1)))
-        random.shuffle(available_fileno_results)
-        for stream_name in ["stdin", "stdout", "stderr"]:
-            fake_fileno = available_fileno_results.pop()
-            stream = getattr(sys, stream_name)
-            func_patcher = mock.patch.object(
-                    stream, "fileno",
-                    return_value=fake_fileno)
-            func_patcher.start()
-            self.addCleanup(func_patcher.stop)
 
     def test_returns_standard_stream_file_descriptors(self):
         """ Should return the file descriptors of all standard streams. """
@@ -1275,24 +1266,24 @@ class get_stream_file_descriptors_TestCase(scaffold.TestCase):
 
     def test_returns_specified_stream_file_descriptors(self):
         """ Should return the file descriptors of specified streams. """
-        fake_streams = dict(
-                stdin=FakeFileDescriptorStringIO(),
-                stdout=FakeFileDescriptorStringIO(),
-                stderr=FakeFileDescriptorStringIO(),
-                )
-        test_kwargs = dict(**fake_streams)
-        result = daemon.daemon.get_stream_file_descriptors(
-                **test_kwargs)
+        test_kwargs = dict(**self.fake_streams)
+        result = daemon.daemon.get_stream_file_descriptors(**test_kwargs)
         expected_fds = set(
-            stream.fileno() for stream in fake_streams.values())
+            stream.fileno() for stream in self.fake_streams.values())
         self.assertEqual(result, expected_fds)
 
     def test_omits_stream_if_stream_has_no_fileno(self):
         """ Should omit a stream that has no `fileno` method. """
-        with mock.patch.object(sys.stdin, "fileno", return_value=None):
-            result = daemon.daemon.get_stream_file_descriptors()
+        test_kwargs = dict(**self.fake_streams)
+        fake_stdin_fileno_method = mock.patch.object(
+            self.fake_streams['stdin'], 'fileno', return_value=None)
+        with fake_stdin_fileno_method:
+            result = daemon.daemon.get_stream_file_descriptors(**test_kwargs)
         expected_fds = set(
-            stream.fileno() for stream in [sys.stdout, sys.stderr])
+            stream.fileno() for stream in [
+                self.fake_streams['stdout'],
+                self.fake_streams['stderr'],
+            ])
         self.assertEqual(result, expected_fds)
 
 
