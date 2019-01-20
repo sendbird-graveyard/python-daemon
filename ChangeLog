@@ -14,7 +14,12 @@ Version NEXT
 :Released: FUTURE
 :Maintainer: UNKNOWN <unknown@example.org>
 
-No changes.
+Bug Fixes:
+
+* Use custom fake file type for testing `fileno` behaviour.
+
+  This works around an incompatibility in Python 2.7 `file` type that
+  caused test cases to fail.
 
 
 Version 2.2.2
