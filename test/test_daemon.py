@@ -1288,10 +1288,16 @@ class get_stream_file_descriptors_TestCase(scaffold.TestCase):
 
     def test_omits_stream_if_stream_has_no_fileno(self):
         """ Should omit a stream that has no `fileno` method. """
-        with mock.patch.object(sys.stdin, "fileno", return_value=None):
-            result = daemon.daemon.get_stream_file_descriptors()
+        test_kwargs = dict(**self.fake_streams)
+        fake_stdin_fileno_method = mock.patch.object(
+            self.fake_streams['stdin'], 'fileno', return_value=None)
+        with fake_stdin_fileno_method:
+            result = daemon.daemon.get_stream_file_descriptors(**test_kwargs)
         expected_fds = set(
-            stream.fileno() for stream in [sys.stdout, sys.stderr])
+            stream.fileno() for stream in [
+                self.fake_streams['stdout'],
+                self.fake_streams['stderr'],
+            ])
         self.assertEqual(result, expected_fds)
 
 
