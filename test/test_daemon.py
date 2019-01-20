@@ -1248,7 +1248,6 @@ class get_stream_file_descriptors_TestCase(scaffold.TestCase):
                 stdout=FakeFileDescriptorStringIO(),
                 stderr=FakeFileDescriptorStringIO(),
                 )
-        self.patch_standard_streams_fileno()
 
     def patch_get_maximum_file_descriptors(self):
         """ Patch the function `get_maximum_file_descriptors`. """
@@ -1257,19 +1256,6 @@ class get_stream_file_descriptors_TestCase(scaffold.TestCase):
                 return_value=self.fake_maxfd)
         self.mock_get_maximum_file_descriptors = func_patcher.start()
         self.addCleanup(func_patcher.stop)
-
-    def patch_standard_streams_fileno(self):
-        """ Patch the method `fileno` of standard streams. """
-        available_fileno_results = list(range(0, (self.fake_maxfd + 1)))
-        random.shuffle(available_fileno_results)
-        for stream_name in ["stdin", "stdout", "stderr"]:
-            fake_fileno = available_fileno_results.pop()
-            stream = getattr(sys, stream_name)
-            func_patcher = mock.patch.object(
-                    stream, "fileno",
-                    return_value=fake_fileno)
-            func_patcher.start()
-            self.addCleanup(func_patcher.stop)
 
     def test_returns_standard_stream_file_descriptors(self):
         """ Should return the file descriptors of all standard streams. """
