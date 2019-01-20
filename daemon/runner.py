@@ -111,16 +111,28 @@ class DaemonRunner:
         self.parse_args()
         self.app = app
         self.daemon_context = DaemonContext()
-        self.daemon_context.stdin = open(app.stdin_path, 'rt')
-        self.daemon_context.stdout = open(app.stdout_path, 'w+t')
-        self.daemon_context.stderr = open(
-                app.stderr_path, 'w+t', buffering=0)
+        self._open_streams_from_app_stream_paths(app)
 
         self.pidfile = None
         if app.pidfile_path is not None:
             self.pidfile = make_pidlockfile(
                     app.pidfile_path, app.pidfile_timeout)
         self.daemon_context.pidfile = self.pidfile
+
+    def _open_streams_from_app_stream_paths(self, app):
+        """ Open the `daemon_context` streams from the paths specified.
+
+            :param app: The application instance.
+
+            Open the `daemon_context` standard streams (`stdin`,
+            `stdout`, `stderr`) as stream objects of the appropriate
+            types, from each of the corresponding filesystem paths
+            from the `app`.
+            """
+        self.daemon_context.stdin = open(app.stdin_path, 'rt')
+        self.daemon_context.stdout = open(app.stdout_path, 'w+t')
+        self.daemon_context.stderr = open(
+                app.stderr_path, 'w+t', buffering=0)
 
     def _usage_exit(self, argv):
         """ Emit a usage message, then exit.
