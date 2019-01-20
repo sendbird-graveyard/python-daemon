@@ -262,13 +262,22 @@ class InvalidFormatError(ValueError):
         self.message = message
 
     def __str__(self):
-        text = "{message}: {source} line {line:d}".format(
+        text = "{message}: {source} line {line}".format(
                 message=(
-                    getattr(self, 'message', "(no message)")),
+                    self.message if self.message is not None
+                    else "(no message)"),
                 source=(
-                    getattr(self.node, 'source', "(source unknown)")),
+                    self.node.source if (
+                        hasattr(self.node, 'source')
+                        and self.node.source is not None
+                        ) else "(source unknown)"
+                    ),
                 line=(
-                    getattr(self.node, 'line', "(unknown)")),
+                    "{:d}".format(self.node.line) if (
+                        hasattr(self.node, 'line')
+                        and self.node.line is not None
+                        ) else "(unknown)"
+                    ),
                 )
 
         return text
