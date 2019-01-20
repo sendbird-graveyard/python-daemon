@@ -1243,6 +1243,11 @@ class get_stream_file_descriptors_TestCase(scaffold.TestCase):
         super(get_stream_file_descriptors_TestCase, self).setUp()
 
         self.patch_get_maximum_file_descriptors()
+        self.fake_streams = dict(
+                stdin=FakeFileDescriptorStringIO(),
+                stdout=FakeFileDescriptorStringIO(),
+                stderr=FakeFileDescriptorStringIO(),
+                )
         self.patch_standard_streams_fileno()
 
     def patch_get_maximum_file_descriptors(self):
@@ -1275,16 +1280,10 @@ class get_stream_file_descriptors_TestCase(scaffold.TestCase):
 
     def test_returns_specified_stream_file_descriptors(self):
         """ Should return the file descriptors of specified streams. """
-        fake_streams = dict(
-                stdin=FakeFileDescriptorStringIO(),
-                stdout=FakeFileDescriptorStringIO(),
-                stderr=FakeFileDescriptorStringIO(),
-                )
-        test_kwargs = dict(**fake_streams)
-        result = daemon.daemon.get_stream_file_descriptors(
-                **test_kwargs)
+        test_kwargs = dict(**self.fake_streams)
+        result = daemon.daemon.get_stream_file_descriptors(**test_kwargs)
         expected_fds = set(
-            stream.fileno() for stream in fake_streams.values())
+            stream.fileno() for stream in self.fake_streams.values())
         self.assertEqual(result, expected_fds)
 
     def test_omits_stream_if_stream_has_no_fileno(self):
