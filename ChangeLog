@@ -21,6 +21,12 @@ Bug Fixes:
   This works around an incompatibility in Python 2.7 `file` type that
   caused test cases to fail.
 
+Changes:
+
+* Promote the warning for `runner` module to a `DeprecationWarning`.
+  This has been an unofficial example module from the beginning, and
+  it will be removed in a future version.
+
 
 Version 2.2.2
 =============

@@ -41,7 +41,7 @@ __metaclass__ = type
 
 warnings.warn(
         "The ‘runner’ module is not a supported API for this library.",
-        PendingDeprecationWarning)
+        DeprecationWarning)
 
 
 class DaemonRunnerError(Exception):
