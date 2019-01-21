@@ -19,9 +19,12 @@ DIST_DIR = $(CURDIR)/dist
 GENERATED_FILES += ${BUILD_DIR}/
 GENERATED_FILES += ${DIST_DIR}/
 
-PYTHON = /usr/bin/python3
+PYTHON ?= /usr/bin/python3
 
-PYTHON_SETUP = $(PYTHON) -m setup
+PYTHON_SETUP ?= $(PYTHON) -m setup
+
+PYTHON_TWINE ?= $(PYTHON) -m twine
+PYTHON_TWINE_UPLOAD_OPTS ?=
 
 
 .PHONY: all
@@ -47,7 +50,7 @@ test:
 
 .PHONY: publish
 publish:
-	$(PYTHON) -m twine upload ${DIST_DIR}/*
+	$(PYTHON_TWINE) upload ${PYTHON_TWINE_UPLOAD_OPTS} ${DIST_DIR}/*
 
 
 .PHONY: clean
