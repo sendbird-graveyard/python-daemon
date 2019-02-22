@@ -1553,6 +1553,65 @@ class EggInfoCommand_run_TestCase(EggInfoCommand_BaseTestCase):
         mock_func_egg_info_run.assert_called_with()
 
 
+class BuildCommand_BaseTestCase(testtools.TestCase):
+    """ Base for test cases for class ‘BuildCommand’. """
+
+    command_class = version.BuildCommand
+    base_command_class = distutils.command.build.build
+
+    def setUp(self):
+        """ Set up test fixtures. """
+        super(BuildCommand_BaseTestCase, self).setUp()
+
+        self.test_distribution = distutils.dist.Distribution()
+        self.test_instance = self.command_class(self.test_distribution)
+
+
+class BuildCommand_TestCase(
+        BuildCommand_BaseTestCase,
+        Command_BaseTestCase):
+    """ Test cases for ‘BuildCommand’ class. """
+
+    def test_sub_commands_includes_egg_info_command(self):
+        """ Should include sub-command named ‘egg_info’. """
+        commands_by_name = dict(self.test_instance.sub_commands)
+        expected_predicate = None
+        expected_item = ('egg_info', expected_predicate)
+        self.assertIn(expected_item, commands_by_name.items())
+
+
+@mock.patch.object(
+        distutils.command.build.build, "run",
+        return_value=None,
+        )
+class BuildCommand_run_TestCase(BuildCommand_BaseTestCase):
+    """ Test cases for ‘BuildCommand.run’ method. """
+
+    def setUp(self):
+        """ Set up test fixtures. """
+        super(BuildCommand_run_TestCase, self).setUp()
+
+        patcher_func_build_get_sub_commands = mock.patch.object(
+                self.base_command_class, "get_sub_commands")
+        patcher_func_build_get_sub_commands.start()
+        self.addCleanup(patcher_func_build_get_sub_commands.stop)
+
+        patcher_func_build_run_command = mock.patch.object(
+                self.base_command_class, "run_command")
+        patcher_func_build_run_command.start()
+        self.addCleanup(patcher_func_build_run_command.stop)
+
+    def test_returns_none(self, mock_func_build_run):
+        """ Should return ``None``. """
+        result = self.test_instance.run()
+        self.assertIs(result, None)
+
+    def test_calls_base_class_run(self, mock_func_build_run):
+        """ Should call base class's ‘run’ method. """
+        self.test_instance.run()
+        mock_func_build_run.assert_called_with()
+
+
 # Copyright © 2008–2019 Ben Finney <ben+python@benfinney.id.au>
 #
 # This is free software: you may copy, modify, and/or distribute this work

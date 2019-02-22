@@ -586,7 +586,7 @@ class BuildCommand(distutils.command.build.build, object):
 
     sub_commands = (
             distutils.command.build.build.sub_commands + [
-                ('write_version_info', has_changelog),
+                ('egg_info', None),
             ])
 
 

@@ -14,7 +14,12 @@ Version NEXT
 :Released: FUTURE
 :Maintainer: UNKNOWN <unknown@example.org>
 
-No changes.
+Bug Fixes:
+
+* Run the Setuptools `egg-info` command as part of the `build`
+  command.
+
+  Closes: Pagure #31.
 
 
 Version 2.2.3
