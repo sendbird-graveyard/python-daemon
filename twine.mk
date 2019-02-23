@@ -18,12 +18,12 @@ TWINE_DIST_FILES ?= ${DIST_DIR}/*
 
 
 .PHONY: twine-upload
-twine-upload: sdist bdist_wheel
+twine-upload: setuptools-dist
 	$(PYTHON_TWINE) upload ${PYTHON_TWINE_UPLOAD_OPTS} ${TWINE_DIST_FILES}
 
 
 .PHONY: twine-check
-twine-check: sdist bdist_wheel
+twine-check: setuptools-dist
 	$(PYTHON_TWINE) check ${TWINE_DIST_FILES}
 
 

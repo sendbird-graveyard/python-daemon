@@ -7,10 +7,14 @@
 # certain conditions; see the end of this file for copyright
 # information, grant of license, and disclaimer of warranty.
 
-# Makefile for ‘python-daemon’ library.
+# Makefile for this project.
 
 SHELL = /bin/bash
 PATH = /usr/bin:/bin
+
+# Variables that will be extended by module include files.
+GENERATED_FILES :=
+CODE_MODULES :=
 
 # Directories with semantic meaning.
 BUILD_DIR = $(CURDIR)/build
@@ -19,25 +23,37 @@ DIST_DIR = $(CURDIR)/dist
 GENERATED_FILES += ${BUILD_DIR}/
 GENERATED_FILES += ${DIST_DIR}/
 
-PYTHON ?= /usr/bin/python3
-
-PYTHON_SETUP ?= $(PYTHON) -m setup
+
+# Establish the default goal.
+.PHONY: all
+all:
 
 
-.PHONY: all
 all: build
 
-
 .PHONY: build
-build: sdist bdist_wheel
+build:
 
-.PHONY: sdist bdist_wheel
-sdist bdist_wheel:
-	$(PYTHON_SETUP) "$@"
+.PHONY: dist
+dist:
 
-GENERATED_FILES += $(CURDIR)/__pycache__/
-GENERATED_FILES += $(CURDIR)/*.egg-info
-GENERATED_FILES += $(CURDIR)/.eggs/
+.PHONY: install
+install: build
+
+
+include setuptools.mk
+
+build: setuptools-build
+
+install: setuptools-install
+
+.PHONY: bdist
+bdist: setuptools-bdist
+
+.PHONY: sdist
+sdist: setuptools-sdist
+
+dist: sdist
 
 
 .PHONY: test
