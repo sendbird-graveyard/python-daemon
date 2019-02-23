@@ -19,14 +19,9 @@ DIST_DIR = $(CURDIR)/dist
 GENERATED_FILES += ${BUILD_DIR}/
 GENERATED_FILES += ${DIST_DIR}/
 
-RELEASE_SIGNING_KEYID ?= B8B24C06AC128405
-
 PYTHON ?= /usr/bin/python3
 
 PYTHON_SETUP ?= $(PYTHON) -m setup
-
-PYTHON_TWINE ?= $(PYTHON) -m twine
-PYTHON_TWINE_UPLOAD_OPTS ?= --sign --identity ${RELEASE_SIGNING_KEYID}
 
 
 .PHONY: all
@@ -50,9 +45,12 @@ test:
 	$(PYTHON_SETUP) "$@"
 
 
+include twine.mk
+
 .PHONY: publish
-publish:
-	$(PYTHON_TWINE) upload ${PYTHON_TWINE_UPLOAD_OPTS} ${DIST_DIR}/*
+publish: twine-check twine-upload
+
+test: twine-check
 
 
 .PHONY: clean
