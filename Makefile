@@ -15,6 +15,7 @@ PATH = /usr/bin:/bin
 # Variables that will be extended by module include files.
 GENERATED_FILES :=
 CODE_MODULES :=
+TEST_MODULES :=
 CODE_PROGRAMS :=
 
 # Directories with semantic meaning.
@@ -64,9 +65,7 @@ sdist: setuptools-sdist
 dist: sdist
 
 
-.PHONY: test
-test:
-	$(PYTHON_SETUP) "$@"
+include test.mk
 
 
 include twine.mk
