@@ -15,18 +15,26 @@ PATH = /usr/bin:/bin
 # Variables that will be extended by module include files.
 GENERATED_FILES :=
 CODE_MODULES :=
+CODE_PROGRAMS :=
 
 # Directories with semantic meaning.
+CODE_PACKAGE_DIRS := daemon
 BUILD_DIR = $(CURDIR)/build
 DIST_DIR = $(CURDIR)/dist
 
 GENERATED_FILES += ${BUILD_DIR}/
 GENERATED_FILES += ${DIST_DIR}/
 
+# List of modules (directories) that comprise our ‘make’ project.
+MODULES := ${CODE_PACKAGE_DIRS}
+
 
 # Establish the default goal.
 .PHONY: all
 all:
+
+# Include the make data for each module.
+include $(patsubst %,%/module.mk,${MODULES})
 
 
 all: build
