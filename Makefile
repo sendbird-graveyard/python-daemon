@@ -20,6 +20,7 @@ CODE_PROGRAMS :=
 
 # Directories with semantic meaning.
 CODE_PACKAGE_DIRS := daemon
+DOC_DIR := doc
 BUILD_DIR = $(CURDIR)/build
 DIST_DIR = $(CURDIR)/dist
 
@@ -28,6 +29,7 @@ GENERATED_FILES += ${DIST_DIR}/
 
 # List of modules (directories) that comprise our ‘make’ project.
 MODULES := ${CODE_PACKAGE_DIRS}
+MODULES += ${DOC_DIR}
 
 
 # Establish the default goal.
