@@ -19,7 +19,8 @@ Bug Fixes:
 * Run the Setuptools `egg-info` command as part of the `build`
   command.
 
-  Closes: Pagure #31.
+  Closes: Pagure #31. Thanks to Stanislav Levin for the bug report and
+  diagnosis.
 
 
 Version 2.2.3

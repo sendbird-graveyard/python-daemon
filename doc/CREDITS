@@ -1,7 +1,7 @@
 Credits for contributors to ‘python-daemon’
 ###########################################
 
-:Updated: 2017-10-12
+:Updated: 2019-02-23
 
 The ‘python-daemon’ library is the work of many contributors.
 
@@ -34,6 +34,7 @@ People who have also contributed substantial improvements:
 
 * Darek Działak
 * Malcolm Purvis
+* Stanislav Levin
 
 
 ..
