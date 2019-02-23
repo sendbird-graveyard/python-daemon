@@ -31,6 +31,8 @@ Bug Fixes:
 
   Closes: Pagure #39. Thanks to Alex Pyrgiotis for the test scenario.
 
+* Declare Twine as a build dependency.
+
 Changes:
 
 * Upgrade Tox dependency to version “3.7.0”.
