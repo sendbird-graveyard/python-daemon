@@ -586,7 +586,7 @@ class BuildCommand(distutils.command.build.build, object):
 
     sub_commands = (
             distutils.command.build.build.sub_commands + [
-                ('write_version_info', has_changelog),
+                ('egg_info', None),
             ])
 
 
@@ -596,13 +596,6 @@ class EggInfoCommand(setuptools.command.egg_info.egg_info, object):
     sub_commands = ([
             ('write_version_info', has_changelog),
             ] + setuptools.command.egg_info.egg_info.sub_commands)
-
-    def run(self):
-        """ Execute this command. """
-        super(EggInfoCommand, self).run()
-
-        for command_name in self.get_sub_commands():
-            self.run_command(command_name)
 
 
 version_info_filename = "version_info.json"

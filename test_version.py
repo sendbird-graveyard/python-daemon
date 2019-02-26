@@ -1479,28 +1479,39 @@ IsSubset = testtools.matchers.MatchesPredicateWithParams(
         set.issubset, "{0} should be a subset of {1}")
 
 
-class EggInfoCommand_TestCase(testtools.TestCase):
-    """ Test cases for ‘EggInfoCommand’ class. """
+class Command_BaseTestCase:
+    """ Base for test cases for distutils command classes. """
 
-    def setUp(self):
-        """ Set up test fixtures. """
-        super(EggInfoCommand_TestCase, self).setUp()
-
-        self.test_distribution = distutils.dist.Distribution()
-        self.test_instance = version.EggInfoCommand(self.test_distribution)
-
-    def test_subclass_of_setuptools_egg_info(self):
-        """ Should be a subclass of Setuptools ‘egg_info’. """
-        self.assertIsInstance(
-                self.test_instance, setuptools.command.egg_info.egg_info)
+    def test_subclass_of_base_command(self):
+        """ Should be a subclass of expected base command class.. """
+        self.assertIsInstance(self.test_instance, self.base_command_class)
 
     def test_sub_commands_include_base_class_sub_commands(self):
         """ Should include base class's sub-commands in this sub_commands. """
-        base_command = setuptools.command.egg_info.egg_info
-        expected_sub_commands = base_command.sub_commands
+        expected_sub_commands = self.base_command_class.sub_commands
         self.assertThat(
                 set(expected_sub_commands),
                 IsSubset(set(self.test_instance.sub_commands)))
+
+
+class EggInfoCommand_BaseTestCase(testtools.TestCase):
+    """ Base for test cases for class ‘EggInfoCommand’. """
+
+    command_class = version.EggInfoCommand
+    base_command_class = setuptools.command.egg_info.egg_info
+
+    def setUp(self):
+        """ Set up test fixtures. """
+        super(EggInfoCommand_BaseTestCase, self).setUp()
+
+        self.test_distribution = distutils.dist.Distribution()
+        self.test_instance = self.command_class(self.test_distribution)
+
+
+class EggInfoCommand_TestCase(
+        EggInfoCommand_BaseTestCase,
+        Command_BaseTestCase):
+    """ Test cases for ‘EggInfoCommand’ class. """
 
     def test_sub_commands_includes_write_version_info_command(self):
         """ Should include sub-command named ‘write_version_info’. """
@@ -1509,49 +1520,96 @@ class EggInfoCommand_TestCase(testtools.TestCase):
         expected_item = ('write_version_info', expected_predicate)
         self.assertIn(expected_item, commands_by_name.items())
 
-
-@mock.patch.object(setuptools.command.egg_info.egg_info, "run")
-class EggInfoCommand_run_TestCase(testtools.TestCase):
+
+@mock.patch.object(
+        setuptools.command.egg_info.egg_info, "run",
+        return_value=None,
+        )
+class EggInfoCommand_run_TestCase(EggInfoCommand_BaseTestCase):
     """ Test cases for ‘EggInfoCommand.run’ method. """
 
     def setUp(self):
         """ Set up test fixtures. """
         super(EggInfoCommand_run_TestCase, self).setUp()
 
-        self.test_distribution = distutils.dist.Distribution()
-        self.test_instance = version.EggInfoCommand(self.test_distribution)
-
-        base_command = setuptools.command.egg_info.egg_info
         patcher_func_egg_info_get_sub_commands = mock.patch.object(
-                base_command, "get_sub_commands")
+                self.base_command_class, "get_sub_commands")
         patcher_func_egg_info_get_sub_commands.start()
         self.addCleanup(patcher_func_egg_info_get_sub_commands.stop)
 
         patcher_func_egg_info_run_command = mock.patch.object(
-                base_command, "run_command")
+                self.base_command_class, "run_command")
         patcher_func_egg_info_run_command.start()
         self.addCleanup(patcher_func_egg_info_run_command.stop)
-
-        self.fake_sub_commands = ["spam", "eggs", "beans"]
-        base_command.get_sub_commands.return_value = self.fake_sub_commands
 
     def test_returns_none(self, mock_func_egg_info_run):
         """ Should return ``None``. """
         result = self.test_instance.run()
         self.assertIs(result, None)
 
-    def test_runs_each_command_in_sub_commands(
-            self, mock_func_egg_info_run):
-        """ Should run each command in ‘self.get_sub_commands()’. """
-        base_command = setuptools.command.egg_info.egg_info
-        self.test_instance.run()
-        expected_calls = [mock.call(name) for name in self.fake_sub_commands]
-        base_command.run_command.assert_has_calls(expected_calls)
-
     def test_calls_base_class_run(self, mock_func_egg_info_run):
         """ Should call base class's ‘run’ method. """
         self.test_instance.run()
         mock_func_egg_info_run.assert_called_with()
+
+
+class BuildCommand_BaseTestCase(testtools.TestCase):
+    """ Base for test cases for class ‘BuildCommand’. """
+
+    command_class = version.BuildCommand
+    base_command_class = distutils.command.build.build
+
+    def setUp(self):
+        """ Set up test fixtures. """
+        super(BuildCommand_BaseTestCase, self).setUp()
+
+        self.test_distribution = distutils.dist.Distribution()
+        self.test_instance = self.command_class(self.test_distribution)
+
+
+class BuildCommand_TestCase(
+        BuildCommand_BaseTestCase,
+        Command_BaseTestCase):
+    """ Test cases for ‘BuildCommand’ class. """
+
+    def test_sub_commands_includes_egg_info_command(self):
+        """ Should include sub-command named ‘egg_info’. """
+        commands_by_name = dict(self.test_instance.sub_commands)
+        expected_predicate = None
+        expected_item = ('egg_info', expected_predicate)
+        self.assertIn(expected_item, commands_by_name.items())
+
+
+@mock.patch.object(
+        distutils.command.build.build, "run",
+        return_value=None,
+        )
+class BuildCommand_run_TestCase(BuildCommand_BaseTestCase):
+    """ Test cases for ‘BuildCommand.run’ method. """
+
+    def setUp(self):
+        """ Set up test fixtures. """
+        super(BuildCommand_run_TestCase, self).setUp()
+
+        patcher_func_build_get_sub_commands = mock.patch.object(
+                self.base_command_class, "get_sub_commands")
+        patcher_func_build_get_sub_commands.start()
+        self.addCleanup(patcher_func_build_get_sub_commands.stop)
+
+        patcher_func_build_run_command = mock.patch.object(
+                self.base_command_class, "run_command")
+        patcher_func_build_run_command.start()
+        self.addCleanup(patcher_func_build_run_command.stop)
+
+    def test_returns_none(self, mock_func_build_run):
+        """ Should return ``None``. """
+        result = self.test_instance.run()
+        self.assertIs(result, None)
+
+    def test_calls_base_class_run(self, mock_func_build_run):
+        """ Should call base class's ‘run’ method. """
+        self.test_instance.run()
+        mock_func_build_run.assert_called_with()
 
 
 # Copyright © 2008–2019 Ben Finney <ben+python@benfinney.id.au>
