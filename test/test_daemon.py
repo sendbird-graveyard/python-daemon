@@ -1536,6 +1536,44 @@ class _get_candidate_file_descriptor_ranges_TestCase(
                     (0, 4),
                     ],
                 }),
+            ('exclude-zero', {
+                'fake_maxfd': 5,
+                'test_kwargs': {
+                    'exclude': {0},
+                },
+                'expected_result': [(1, 5)],
+                }),
+            ('exclude-consecutive', {
+                'fake_maxfd': 5,
+                'test_kwargs': {
+                    'exclude': {1, 2},
+                },
+                'expected_result': [
+                    (0, 1),
+                    (3, 5),
+                ],
+                }),
+            ('exclude-all', {
+                'fake_maxfd': 5,
+                'test_kwargs': {
+                    'exclude': {0, 1, 2, 3, 4},
+                },
+                'expected_result': []
+                }),
+            ('exclude-maxfd', {
+                'fake_maxfd': 5,
+                'test_kwargs': {
+                    'exclude': {5},
+                },
+                'expected_result': [(0, 5)]
+                }),
+            ('exclude-out-of-bounds', {
+                'fake_maxfd': 5,
+                'test_kwargs': {
+                    'exclude': {-9, -3, 6, 10},
+                },
+                'expected_result': [(0, 5)]
+                }),
             ]
 
     def test_returns_expected_file_descriptors(self):
