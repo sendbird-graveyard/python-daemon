@@ -22,6 +22,11 @@ Bug Fixes:
   Closes: Pagure #31. Thanks to Stanislav Levin for the bug report and
   diagnosis.
 
+* Create the socket and catch “non-socket” errors.
+
+  Closes: Pagure #34. Thanks to Miro Hrončok for the bug report and
+  patch.
+
 Changes:
 
 * Upgrade Tox dependency to version “3.7.0”.
