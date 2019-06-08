@@ -912,9 +912,17 @@ def _get_candidate_file_descriptor_ranges(exclude):
         """
     candidates_list = sorted(_get_candidate_file_descriptors(exclude))
     ranges = []
-    this_range = FileDescriptorRange(
-            low=min(candidates_list),
-            high=(min(candidates_list) + 1))
+
+    def append_range_if_needed(candidate_range):
+        if (candidate_range.low < candidate_range.high):
+            # The range is not empty.
+            ranges.append(candidate_range)
+
+    this_range = (
+        FileDescriptorRange(
+                low=min(candidates_list),
+                high=(min(candidates_list) + 1))
+        if candidates_list else FileDescriptorRange(low=0, high=0))
     for fd in candidates_list[1:]:
         high = fd + 1
         if this_range.high == fd:
@@ -922,10 +930,10 @@ def _get_candidate_file_descriptor_ranges(exclude):
             this_range = this_range._replace(high=high)
         else:
             # The previous range has ended at a gap.
-            ranges.append(this_range)
+            append_range_if_needed(this_range)
             # This file descriptor begins a new range.
             this_range = FileDescriptorRange(low=fd, high=high)
-    ranges.append(this_range)
+    append_range_if_needed(this_range)
     return ranges
 
 

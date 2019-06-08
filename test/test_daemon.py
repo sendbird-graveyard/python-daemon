@@ -1482,6 +1482,20 @@ class _get_candidate_file_descriptor_ranges_TestCase(
     """ Test cases for function `_get_candidate_file_descriptor_ranges`. """
 
     scenarios = [
+            ('exclude-none', {
+                'fake_maxfd': 5,
+                'test_kwargs': {
+                    'exclude': set(),
+                },
+                'expected_result': [(0, 5)],
+                }),
+            ('exclude-all', {
+                'fake_maxfd': 5,
+                'test_kwargs': {
+                    'exclude': {0, 1, 2, 3, 4},
+                },
+                'expected_result': [],
+                }),
             ('exclude-three', {
                 'fake_maxfd': 10,
                 'test_kwargs': {

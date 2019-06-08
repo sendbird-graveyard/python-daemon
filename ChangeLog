@@ -27,6 +27,10 @@ Bug Fixes:
   Closes: Pagure #34. Thanks to Miro Hrončok for the bug report and
   patch.
 
+* Only deal with a range of file descriptors if the range is not empty.
+
+  Closes: Pagure #39. Thanks to Alex Pyrgiotis for the test scenario.
+
 Changes:
 
 * Upgrade Tox dependency to version “3.7.0”.
