@@ -1494,6 +1494,25 @@ class _get_candidate_file_descriptor_ranges_TestCase(
                     (9, 10),
                     ],
                 }),
+            ('exclude-lowest', {
+                'fake_maxfd': 5,
+                'test_kwargs': {
+                    'exclude': {0},
+                    },
+                'expected_result': [
+                    (1, 5),
+                    ],
+                }),
+            ('exclude-middle', {
+                'fake_maxfd': 5,
+                'test_kwargs': {
+                    'exclude': {1, 2, 3},
+                    },
+                'expected_result': [
+                    (0, 1),
+                    (4, 5),
+                    ],
+                }),
             ('exclude-highest', {
                 'fake_maxfd': 5,
                 'test_kwargs': {
@@ -1502,13 +1521,6 @@ class _get_candidate_file_descriptor_ranges_TestCase(
                 'expected_result': [
                     (0, 4),
                     ],
-                }),
-            ('exclude-none', {
-                'fake_maxfd': 5,
-                'test_kwargs': {
-                    'exclude': set(),
-                },
-                'expected_result': [(0, 5)],
                 }),
             ]
 
