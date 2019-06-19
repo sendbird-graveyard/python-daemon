@@ -1496,7 +1496,7 @@ class _get_candidate_file_descriptor_ranges_TestCase(
                 },
                 'expected_result': [],
                 }),
-            ('exclude-three', {
+            ('exclude-three-discrete', {
                 'fake_maxfd': 10,
                 'test_kwargs': {
                     'exclude': {3, 5, 8},
@@ -1506,6 +1506,16 @@ class _get_candidate_file_descriptor_ranges_TestCase(
                     (4, 5),
                     (6, 8),
                     (9, 10),
+                    ],
+                }),
+            ('exclude-three-consecutive', {
+                'fake_maxfd': 10,
+                'test_kwargs': {
+                    'exclude': {3, 4, 5},
+                    },
+                'expected_result': [
+                    (0, 3),
+                    (6, 10),
                     ],
                 }),
             ('exclude-lowest', {
@@ -1534,6 +1544,24 @@ class _get_candidate_file_descriptor_ranges_TestCase(
                     },
                 'expected_result': [
                     (0, 4),
+                    ],
+                }),
+            ('exclude-maxfd', {
+                'fake_maxfd': 5,
+                'test_kwargs': {
+                    'exclude': {5},
+                    },
+                'expected_result': [
+                    (0, 5),
+                    ],
+                }),
+            ('exclude-out-of-bounds', {
+                'fake_maxfd': 5,
+                'test_kwargs': {
+                    'exclude': {-9, -3, 6, 10},
+                    },
+                'expected_result': [
+                    (0, 5),
                     ],
                 }),
             ]
