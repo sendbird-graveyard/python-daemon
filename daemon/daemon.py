@@ -846,6 +846,9 @@ def close_file_descriptor_if_open(fd):
             raise error
 
 
+FileDescriptorRange = collections.namedtuple(
+        'FileDescriptorRange', ['low', 'high'])
+
 MAXFD = 2048
 
 
@@ -888,10 +891,6 @@ def _get_candidate_file_descriptors(exclude):
     maxfd = get_maximum_file_descriptors()
     candidates = set(range(0, maxfd)).difference(exclude)
     return candidates
-
-
-FileDescriptorRange = collections.namedtuple(
-        'FileDescriptorRange', ['low', 'high'])
 
 
 def _get_candidate_file_descriptor_ranges(exclude):
