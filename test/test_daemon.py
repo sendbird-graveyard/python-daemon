@@ -1440,6 +1440,19 @@ def fake_get_maximum_file_descriptors():
     return fake_default_maxfd
 
 
+def make_get_maximum_file_descriptors_patch(self, fake_maxfd):
+    """ Make a `get_maximum_file_descriptors` patch for the `testcase`.
+
+        :param testcase: The `unittest.TestCase` instance to patch.
+        :param fake_maxfd: The fake maximum file descriptor value.
+        :return: The `unittest.mock.patch` object.
+        """
+    func_patcher = mock.patch.object(
+        daemon.daemon, "get_maximum_file_descriptors",
+        return_value=fake_maxfd)
+    return func_patcher
+
+
 class _get_candidate_file_descriptors_TestCase(scaffold.TestCaseWithScenarios):
     """ Test cases for function `_get_candidate_file_descriptors`. """
 
@@ -1469,9 +1482,7 @@ class _get_candidate_file_descriptors_TestCase(scaffold.TestCaseWithScenarios):
 
     def test_returns_expected_file_descriptors(self):
         """ Should return the expected set of file descriptors. """
-        with mock.patch.object(
-                daemon.daemon, "get_maximum_file_descriptors",
-                return_value=self.fake_maxfd):
+        with make_get_maximum_file_descriptors_patch(self, self.fake_maxfd):
             result = daemon.daemon._get_candidate_file_descriptors(
                     **self.test_kwargs)
         self.assertEqual(result, self.expected_result)
@@ -1568,9 +1579,7 @@ class _get_candidate_file_descriptor_ranges_TestCase(
 
     def test_returns_expected_file_descriptors(self):
         """ Should return the expected set of file descriptors. """
-        with mock.patch.object(
-                daemon.daemon, "get_maximum_file_descriptors",
-                return_value=self.fake_maxfd):
+        with make_get_maximum_file_descriptors_patch(self, self.fake_maxfd):
             result = daemon.daemon._get_candidate_file_descriptor_ranges(
                     **self.test_kwargs)
         self.assertEqual(result, self.expected_result)
@@ -1624,16 +1633,13 @@ class close_all_open_files_TestCase(scaffold.TestCase):
         """ Set up test fixtures. """
         super(close_all_open_files_TestCase, self).setUp()
 
-        self.patch_get_maximum_file_descriptors(self.fake_maxfd)
-        self.patch_os_closerange()
+        get_maximum_file_descriptors_patch = (
+                make_get_maximum_file_descriptors_patch(
+                    self, fake_maxfd=self.fake_maxfd))
+        get_maximum_file_descriptors_patch.start()
+        self.addCleanup(get_maximum_file_descriptors_patch.stop)
 
-    def patch_get_maximum_file_descriptors(self, fake_maxfd):
-        """ Patch `get_maximum_file_descriptors` for this test case. """
-        func_patcher = mock.patch.object(
-            daemon.daemon, "get_maximum_file_descriptors",
-            return_value=fake_maxfd)
-        self.mock_func_get_maximum_file_descriptors = func_patcher.start()
-        self.addCleanup(func_patcher.stop)
+        self.patch_os_closerange()
 
     def patch_os_closerange(self):
         """ Patch `os.closerange` function for this test case. """
