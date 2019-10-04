@@ -1593,7 +1593,7 @@ class _close_file_descriptor_ranges_TestCase(scaffold.TestCaseWithScenarios):
             ('ranges-one', {
                 'test_kwargs': {
                     'ranges': [
-                        daemon.daemon.FileDescriptorRange(0, 10),
+                        (0, 10),
                         ],
                     },
                 'expected_os_closerange_calls': [
@@ -1603,9 +1603,9 @@ class _close_file_descriptor_ranges_TestCase(scaffold.TestCaseWithScenarios):
             ('ranges-three', {
                 'test_kwargs': {
                     'ranges': [
-                        daemon.daemon.FileDescriptorRange(5, 10),
-                        daemon.daemon.FileDescriptorRange(0, 3),
-                        daemon.daemon.FileDescriptorRange(15, 20),
+                        (5, 10),
+                        (0, 3),
+                        (15, 20),
                         ],
                     },
                 'expected_os_closerange_calls': [
