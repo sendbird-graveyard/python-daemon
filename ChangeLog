@@ -37,6 +37,15 @@ Changes:
 
   Thanks to Miro Hrončok for the contribution.
 
+* Significant speed-up to discovery of file descriptors to close.
+
+  By using a native `tuple` for the heavily-used file descriptor range
+  representation, this gives approximately 5× faster calls to
+  `close_all_open_files` in the typical case. This partially addresses
+  Pagure #40.
+
+  Thanks to Alex Pyrgiotis for testing various alternative proposals.
+
 
 Version 2.2.3
 =============

@@ -846,6 +846,9 @@ def close_file_descriptor_if_open(fd):
             raise error
 
 
+FileDescriptorRange = collections.namedtuple(
+        'FileDescriptorRange', ['low', 'high'])
+
 MAXFD = 2048
 
 
@@ -890,10 +893,6 @@ def _get_candidate_file_descriptors(exclude):
     return candidates
 
 
-FileDescriptorRange = collections.namedtuple(
-        'FileDescriptorRange', ['low', 'high'])
-
-
 def _get_candidate_file_descriptor_ranges(exclude):
     """ Get the collection of candidate file descriptor ranges.
 
@@ -914,25 +913,24 @@ def _get_candidate_file_descriptor_ranges(exclude):
     ranges = []
 
     def append_range_if_needed(candidate_range):
-        if (candidate_range.low < candidate_range.high):
+        (low, high) = candidate_range
+        if (low < high):
             # The range is not empty.
             ranges.append(candidate_range)
 
     this_range = (
-        FileDescriptorRange(
-                low=min(candidates_list),
-                high=(min(candidates_list) + 1))
-        if candidates_list else FileDescriptorRange(low=0, high=0))
+        (min(candidates_list), (min(candidates_list) + 1))
+        if candidates_list else (0, 0))
     for fd in candidates_list[1:]:
         high = fd + 1
-        if this_range.high == fd:
+        if this_range[1] == fd:
             # This file descriptor extends the current range.
-            this_range = this_range._replace(high=high)
+            this_range = (this_range[0], high)
         else:
             # The previous range has ended at a gap.
             append_range_if_needed(this_range)
             # This file descriptor begins a new range.
-            this_range = FileDescriptorRange(low=fd, high=high)
+            this_range = (fd, high)
     append_range_if_needed(this_range)
     return ranges
 
@@ -948,7 +946,7 @@ def _close_file_descriptor_ranges(ranges):
         `low` and ending before `high` – from each range in `ranges`.
         """
     for range in ranges:
-        os.closerange(range.low, range.high)
+        os.closerange(range[0], range[1])
 
 
 def close_all_open_files(exclude=None):
