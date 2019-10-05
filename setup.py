@@ -43,6 +43,16 @@ def test_suite():
     suite = loader.discover(os.path.curdir, pattern='test_*.py')
     return suite
 
+
+test_requirements = [
+        "unittest2 >=0.5.1",
+        "testtools",
+        "testscenarios >=0.4",
+        "mock >=1.3",
+        "coverage",
+        "docutils",
+        ]
+
 
 setup_kwargs = dict(
         distclass=version.ChangelogAwareDistribution,
@@ -61,13 +71,7 @@ setup_kwargs = dict(
             "twine",
             ],
         test_suite="setup.test_suite",
-        tests_require=[
-            "unittest2 >=0.5.1",
-            "testtools",
-            "testscenarios >=0.4",
-            "mock >=1.3",
-            "docutils",
-            ],
+        tests_require=test_requirements,
         install_requires=[
             "setuptools",
             "lockfile >=0.10",
