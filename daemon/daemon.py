@@ -938,8 +938,8 @@ def _get_candidate_file_descriptor_ranges(exclude):
 def _close_file_descriptor_ranges(ranges):
     """ Close file descriptors described by `ranges`.
 
-        :param ranges: A sequence of `FileDescriptorRange` instances,
-            each describing a range of file descriptors to close.
+        :param ranges: A sequence of tuples `(low, high)`, each
+            describing a range of file descriptors to close.
         :return: ``None``.
 
         Attempt to close each open file descriptor – starting from
