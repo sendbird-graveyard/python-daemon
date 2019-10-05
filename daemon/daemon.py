@@ -846,9 +846,6 @@ def close_file_descriptor_if_open(fd):
             raise error
 
 
-FileDescriptorRange = collections.namedtuple(
-        'FileDescriptorRange', ['low', 'high'])
-
 MAXFD = 2048
 
 
