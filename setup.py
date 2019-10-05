@@ -80,6 +80,7 @@ setup_kwargs = dict(
         keywords="daemon fork unix".split(),
         url=metadata.url,
         long_description=long_description,
+        long_description_content_type="text/x-rst",
         classifiers=[
             # Reference: <URL:https://pypi.org/classifiers/>
             "Development Status :: 5 - Production/Stable",
