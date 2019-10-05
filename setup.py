@@ -76,6 +76,9 @@ setup_kwargs = dict(
             "setuptools",
             "lockfile >=0.10",
             ],
+        extras_require={
+            'test': test_requirements,
+            },
 
         # PyPI metadata.
         author=metadata.author_name,
