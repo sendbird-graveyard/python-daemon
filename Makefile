@@ -7,52 +7,75 @@
 # certain conditions; see the end of this file for copyright
 # information, grant of license, and disclaimer of warranty.
 
-# Makefile for ‘python-daemon’ library.
+# Makefile for this project.
 
 SHELL = /bin/bash
 PATH = /usr/bin:/bin
 
+# Variables that will be extended by module include files.
+GENERATED_FILES :=
+CODE_MODULES :=
+TEST_MODULES :=
+CODE_PROGRAMS :=
+
 # Directories with semantic meaning.
+CODE_PACKAGE_DIRS := daemon
+DOC_DIR := doc
 BUILD_DIR = $(CURDIR)/build
 DIST_DIR = $(CURDIR)/dist
 
 GENERATED_FILES += ${BUILD_DIR}/
 GENERATED_FILES += ${DIST_DIR}/
 
-RELEASE_SIGNING_KEYID ?= B8B24C06AC128405
-
-PYTHON ?= /usr/bin/python3
-
-PYTHON_SETUP ?= $(PYTHON) -m setup
-
-PYTHON_TWINE ?= $(PYTHON) -m twine
-PYTHON_TWINE_UPLOAD_OPTS ?= --sign --identity ${RELEASE_SIGNING_KEYID}
+# List of modules (directories) that comprise our ‘make’ project.
+MODULES := ${CODE_PACKAGE_DIRS}
+MODULES += ${DOC_DIR}
 
 
+# Establish the default goal.
 .PHONY: all
+all:
+
+# Include the make data for each module.
+include $(patsubst %,%/module.mk,${MODULES})
+
+
 all: build
 
-
 .PHONY: build
-build: sdist bdist_wheel
+build:
 
-.PHONY: sdist bdist_wheel
-sdist bdist_wheel:
-	$(PYTHON_SETUP) "$@"
+.PHONY: dist
+dist:
 
-GENERATED_FILES += $(CURDIR)/__pycache__/
-GENERATED_FILES += $(CURDIR)/*.egg-info
-GENERATED_FILES += $(CURDIR)/.eggs/
+.PHONY: install
+install: build
 
 
-.PHONY: test
-test:
-	$(PYTHON_SETUP) "$@"
+include setuptools.mk
+
+build: setuptools-build
+
+install: setuptools-install
+
+.PHONY: bdist
+bdist: setuptools-bdist
+
+.PHONY: sdist
+sdist: setuptools-sdist
+
+dist: sdist
 
 
+include test.mk
+
+
+include twine.mk
+
 .PHONY: publish
-publish:
-	$(PYTHON_TWINE) upload ${PYTHON_TWINE_UPLOAD_OPTS} ${DIST_DIR}/*
+publish: twine-check twine-upload
+
+test: twine-check
 
 
 .PHONY: clean

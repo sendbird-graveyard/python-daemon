@@ -48,6 +48,8 @@ Changes:
 
   Thanks to Alex Pyrgiotis for testing various alternative proposals.
 
+* Refactor the build system to use Makefile modules for each topic.
+
 
 Version 2.2.3
 =============
