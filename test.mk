@@ -28,6 +28,7 @@ TEST_PYMCCABE_OPTS ?= --min ${TEST_PYMCCABE_MIN}
 
 
 .PHONY: test
+test: test-pycodestyle
 test: test-unittest
 
 .PHONY: test-unittest
