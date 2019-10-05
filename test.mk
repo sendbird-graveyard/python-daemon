@@ -21,6 +21,8 @@ TEST_COVERAGE_RUN_OPTS ?= --branch
 TEST_COVERAGE_REPORT_OPTS ?=
 TEST_COVERAGE_HTML_OPTS ?= --directory ${coverage_html_report_dir}/
 
+TEST_FLAKE8_OPTS ?=
+
 TEST_PYCODESTYLE_OPTS ?=
 
 TEST_PYMCCABE_MIN ?= 3
@@ -64,6 +66,15 @@ GENERATED_FILES += ${coverage_html_report_dir}
 test-coverage-report: .coverage
 	$(PYTHON) -m coverage report ${TEST_COVERAGE_REPORT_OPTS} \
 		$(filter-out ${TEST_MODULES},${CODE_MODULES})
+
+
+.PHONY: test-static
+test-static: test-flake8
+
+.PHONY: test-flake8
+test-flake8:
+	$(PYTHON3) -m pip install flake8
+	$(PYTHON3) -m flake8 ${TEST_FLAKE8_OPTS}
 
 
 .PHONY: test-style
