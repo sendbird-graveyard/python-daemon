@@ -66,7 +66,7 @@ Bugs Fixed:
   This works around an incompatibility in Python 2.7 `file` type that
   caused test cases to fail.
 
-Changed:
+Deprecated:
 
 * Promote the warning for `runner` module to a `DeprecationWarning`.
   This has been an unofficial example module from the beginning, and
@@ -147,6 +147,9 @@ Changed:
 
 * Migrate code project hosting to Pagure.
   Record the change of homepage URL in PyPI metadata.
+
+Deprecated:
+
 * Raise a warning that the ‘runner’ module is pending deprecation.
   This has been an unofficial example module from the beginning, and
   it will be removed in a future version.
